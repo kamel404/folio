@@ -40,3 +40,9 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+# local Claude Code settings
+.claude/settings.local.json
+
+# internal planning doc
+/folio_implementation_plan.md

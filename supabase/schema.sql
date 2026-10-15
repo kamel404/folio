@@ -3,7 +3,7 @@
 -- Run once in Supabase → SQL Editor → New query → paste → Run.
 -- Safe to re-run: uses IF NOT EXISTS / OR REPLACE / DROP POLICY IF EXISTS.
 --
--- Differences from the plan's draft (see folio_implementation_plan.md → Database Schema):
+-- Notable design decisions:
 --   • gen_random_uuid() instead of uuid_generate_v4() (built in, no extension)
 --   • tenants.plan defaults to 'none' — there is no free tier
 --   • Public read policies only expose tenants that have an active paid plan
