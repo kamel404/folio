@@ -23,7 +23,8 @@
 13. [API & Route Design](#api--route-design)
 14. [Security Architecture](#security-architecture)
 15. [File & Folder Structure](#file--folder-structure)
-16. [Development Phases](#development-phases)
+16. [Supabase Setup](#supabase-setup)
+17. [Development Phases](#development-phases)
 
 ---
 
@@ -52,10 +53,16 @@ Pick Theme Palette (5 curated palettes + custom)
      ↓
 Review & Edit generated content in dashboard
      ↓
+Private preview (everything above costs nothing)
+     ↓
+Choose a plan — Starter or Pro (no free tier)
+     ↓
 Portfolio goes live at: username.getfolio.dev
      ↓
 Share link. Done.
 ```
+
+> **Business model:** Folio has **no free plan**. Signing up, onboarding, AI import, editing and a private preview are open to everyone; **publishing requires a paid plan** (Starter or Pro). See [Payment & Subscription](#payment--subscription).
 
 ## Target Users
 
@@ -93,66 +100,97 @@ Explicitly avoid:
 
 ## Platform Color Palette (Folio Dashboard & Marketing Site)
 
-The platform itself (marketing pages, signup, dashboard) uses a fixed neutral palette with one signature accent. This is separate from the user's portfolio theme.
+**Direction: "Paper & Vermilion" — editorial.** The platform itself (marketing pages, auth, onboarding, dashboard) looks like a well-set printed publication: warm newsprint paper, near-black ink, hairline rules instead of shadows, and a single vermilion accent. This is separate from the user's portfolio theme (see [Theme Engine](#theme-engine)).
+
+Tokens live in `src/app/globals.css` (`:root`) and are bridged to Tailwind via `@theme inline`.
 
 ```
 ┌──────────────────────────────────────────────────────────────┐
-│  PLATFORM PALETTE                                            │
+│  PLATFORM PALETTE — PAPER & VERMILION                        │
 ├──────────────────────────────────────────────────────────────┤
 │                                                              │
-│  Background        #FAFAF8    warm off-white                 │
-│  Surface           #FFFFFF    cards, panels                  │
-│  Surface Raised    #F5F4F0    hover states, alternating rows │
-│  Foreground        #18181B    primary text                   │
-│  Text Secondary    #71717A    descriptions, labels           │
-│  Text Tertiary     #A1A1AA    placeholders, hints            │
+│  Background        #F3F0E8    warm newsprint page            │
+│  Surface           #FBFAF6    card stock                     │
+│  Surface Raised    #ECE8DD    hover states, alternating rows │
+│  Foreground        #16150F    ink: text, primary buttons     │
+│  Text Secondary    #5C584D    body copy, descriptions        │
+│  Text Tertiary     #8C8676    placeholders, hints, meta      │
 │                                                              │
-│  Border            #E4E4E7    lines, dividers                │
-│  Border Subtle     #F0EFEB    light separators               │
+│  Border            #D9D3C4    hairline rules, dividers       │
+│  Border Subtle     #E6E1D5    light separators               │
+│  Border Strong     #16150F    emphasis rules (table heads)   │
 │                                                              │
-│  Accent            #2563EB    links, primary buttons, focus  │
-│  Accent Hover      #1D4ED8    button hover                   │
-│  Accent Light      #EFF6FF    accent background tint         │
+│  Accent            #C63D1B    vermilion: highlights, focus   │
+│  Accent Hover      #A93215    accent hover                   │
+│  Accent Light      #F6E2D8    accent tint                    │
+│  Accent FG         #FBFAF6    text on accent                 │
+│  Proof             = Accent   fixed vermilion for annotations│
+│                               inside tenant-palette previews │
 │                                                              │
-│  Success           #16A34A    confirmations, live status      │
-│  Warning           #CA8A04    caution, trial notices          │
-│  Error             #DC2626    destructive, validation errors  │
+│  Ink (inverted)    #16150F    dark closing band background   │
+│  Ink FG            #F3F0E8    text on ink                    │
+│  Ink Muted         #A9A392    secondary text on ink          │
+│  Ink Border        #34322A    rules on ink                   │
+│                                                              │
+│  Success           #2F7A4A    confirmations, live status     │
+│  Warning           #A86A08    caution notices                │
+│  Error             #B42318    destructive, validation errors │
 │                                                              │
 └──────────────────────────────────────────────────────────────┘
 ```
 
 ### Why This Palette
 
-- **Blue accent (#2563EB)** — trustworthy, professional, neutral across cultures. Works in both Arab and Western contexts. Does not feel "techy" or "startup-y" — it feels like a tool you can trust.
-- **Warm off-white (#FAFAF8)** — not cold white, not beige. Slightly warm so it doesn't feel clinical.
-- **Zinc-based grays** — modern, consistent, taken from a professional design scale (Tailwind zinc).
+- **Vermilion accent (#C63D1B)** — printer's red. Used sparingly (one italic word per headline, section numbers, focus), so it reads as editorial emphasis, not "SaaS brand colour". Passes WCAG AA against the accent-fg text.
+- **Warm paper (#F3F0E8)** — distinctly not white, which is the single biggest move away from the generic Tailwind/shadcn look.
+- **Ink, not grey** — primary buttons are near-black ink and turn vermilion on hover.
+- **Rules over shadows** — structure comes from 1px hairlines and a strong top rule on lists/tables; shadows are almost absent.
 
 ## Typography
 
 ```
-Primary:     Inter              body, navigation, buttons, labels
-Headings:    Inter (700/600)    all headings, page titles
-Monospace:   JetBrains Mono     code snippets, technical labels (optional)
+Display:     Instrument Serif (400, + italic)   h1, h2 — page & section titles, big numerals
+Primary:     Inter                              body, navigation, buttons, h3–h6 inside components
+Monospace:   JetBrains Mono                     eyebrows, labels, meta, URLs, code
 
-Font Sizes:
-  xs     0.75rem / 12px    badges, captions
-  sm     0.875rem / 14px   labels, secondary text
-  base   1rem / 16px       body text
-  lg     1.125rem / 18px   large body, descriptions
-  xl     1.25rem / 20px    section titles
-  2xl    1.5rem / 24px     page headings
-  3xl    1.875rem / 30px   hero subheadings
-  4xl    2.25rem / 36px    hero titles (mobile)
-  5xl    3rem / 48px       hero titles (desktop)
+Loaded via next/font/google in src/app/layout.tsx as
+--font-instrument / --font-inter / --font-jetbrains, exposed to Tailwind as
+font-display / font-sans / font-mono.
+
+Display sizes (fluid):
+  hero h1        clamp(3rem, 7.5vw, 6.25rem)
+  page h1        clamp(2.75rem, 6vw, 4.75rem)
+  section h2     clamp(2.25rem, 4.5vw, 3.5rem)
+
+Text sizes: Tailwind defaults (xs 12 · sm 14 · base 16 · lg 18 · xl 20 …)
+Label:       .label-mono — 11px mono, uppercase, 0.08em tracking
 ```
 
 ### Typography Rules
 
-- Maximum **two font families** across the entire platform (Inter + optional monospace)
-- Headings use **semibold (600) or bold (700)** — never light or thin
-- Body text uses **regular (400)** — never medium for paragraphs
-- Line height: headings `1.2`, body `1.6`, tight `1.4`
-- Letter spacing: headings `-0.025em`, body `normal`
+- **Three families, fixed roles** — serif for titles, Inter for everything inside components, mono for labels. (Deliberate change from the earlier "Inter only" rule: the serif display is what makes Folio look hand-set rather than template-generated.)
+- `h1`/`h2` default to the serif at **weight 400 — never bold it** (Instrument Serif has a single weight; bolding would be faked).
+- `h3`–`h6` default to Inter 600.
+- Emphasis in headlines = one *italic* phrase, coloured accent or secondary.
+- Body text uses regular (400); line height 1.6; `text-wrap: balance` on headings, `pretty` on paragraphs.
+
+## Page Grammar (shared layout — every page)
+
+Every page in every route group is assembled from the same primitives in `src/components/layout/section.tsx`, so marketing, auth, onboarding and dashboard read as one publication:
+
+```
+<Eyebrow index="01" label="How it works" />     01 ──── HOW IT WORKS   (mono, accent number)
+<SectionHeader … />                             eyebrow + serif title (cols 1–7) + lede (cols 9–12)
+<Section index label title lede tone>           ruled band, py-20/28; tone = paper | surface | ink
+<PageHeader index label title lede actions />   top of any non-landing page (serif h1)
+```
+
+- **12-column grid** everywhere: `grid-12` utility (12 cols, 24px gutter) inside `Container` (max 1200px, px-6).
+- Sections are separated by a **1px hairline**; lists/tables inside them start with a **strong ink top rule**.
+- Sections are **numbered** (`00`, `01`, `02` …) in page order.
+- At most **one ink (inverted) band** per page, used for the closing call to action.
+
+Other editorial utilities in `globals.css`: `label-mono`, `link-underline`, `leader` (dotted table-of-contents leader).
 
 ## Spacing Scale
 
@@ -178,54 +216,74 @@ All spacing uses this 4px base grid. No ad-hoc pixel values.
 
 ```
 none    0
-sm      4px      small badges, tags
-md      6px      buttons, inputs
-lg      8px      cards
-xl      12px     modals, panels
-2xl     16px     images, large cards
-full    9999px   pills, avatars
+sm      2px      badges, inner buttons
+md      4px      buttons, inputs
+lg      6px      cards, previews
+xl      10px     modals, panels
+2xl     14px     images, large cards
+full    9999px   status dots, avatars
 ```
+
+Kept tight on purpose — editorial, not bubbly.
 
 ## Shadow Scale
 
 ```
-sm      0 1px 2px rgba(0,0,0,0.04)           subtle lift
-md      0 2px 8px rgba(0,0,0,0.06)           cards
-lg      0 4px 16px rgba(0,0,0,0.08)          modals, dropdowns
-xl      0 8px 32px rgba(0,0,0,0.10)          elevated panels
+sm      0 1px 0 rgba(22,21,15,0.04)                                   hairline lift
+md      0 1px 2px rgba(22,21,15,0.05), 0 4px 12px rgba(22,21,15,0.04)  interactive cards
+lg      0 2px 4px rgba(22,21,15,0.05), 0 12px 32px rgba(22,21,15,0.07) previews, dropdowns
+xl      0 4px 8px rgba(22,21,15,0.06), 0 24px 48px rgba(22,21,15,0.09) modals
 ```
 
-Shadows are intentionally subtle. No heavy drop shadows.
+Shadows are ink-tinted and rare. Structure comes from rules, not elevation.
 
 ## Component Standards
 
-### Buttons
+### Buttons (`components/ui/button.tsx`)
 
 ```
-Primary:     bg-accent text-white rounded-md px-4 py-2.5 font-medium
-Secondary:   bg-transparent border border-border text-foreground rounded-md
-Ghost:       bg-transparent text-secondary hover:bg-surface-raised rounded-md
-Danger:      bg-error text-white rounded-md
+Primary:     ink bg, paper text → hover: vermilion bg       (main CTA)
+Accent:      vermilion bg, accent-fg text → hover: accent-hover
+Secondary:   transparent, 1px ink border → hover: ink fill, paper text
+Ghost:       transparent, text-secondary → hover: surface-raised
+Danger:      error bg
+Link:        accent text, underline on hover
 
-States:      hover → darken 8%, active → darken 12%, disabled → opacity 50%
-Transition:  all 150ms ease
+Radius md (4px) · disabled → opacity 50% · transition 150ms
+Links styled as buttons use buttonVariants() on <Link>.
+```
+
+### Badges (`components/ui/badge.tsx`)
+
+```
+Mono, 11px, uppercase, 0.08em tracking, radius sm (2px)
+Variants: default · accent · success · warning · error · outline
 ```
 
 ### Inputs
 
 ```
-Default:     bg-white border border-border rounded-md px-3.5 py-2.5 text-base
+Default:     bg-surface border border-border rounded-md px-3.5 py-2.5 text-base
 Focus:       border-accent ring-2 ring-accent/20
 Error:       border-error ring-2 ring-error/20
 Placeholder: text-tertiary
+URL/slug fields use font-mono (see ClaimForm).
 ```
 
 ### Cards
 
 ```
-Default:     bg-white border border-border rounded-lg p-6
+Default:     bg-surface border border-border rounded-lg p-6
 Hover:       shadow-md (on interactive cards only)
 Transition:  shadow 200ms ease
+Prefer ruled lists (strong top rule + hairline rows) over grids of cards.
+```
+
+### Brand
+
+```
+Wordmark:    "folio." — Instrument Serif, vermilion full stop (components/ui/wordmark.tsx)
+Styleguide:  /styleguide renders every token and component (noindex)
 ```
 
 ## Animation Guidelines
@@ -279,7 +337,7 @@ Container max-width: 1200px (centered, px-6 on mobile)
                       │     Vercel (Next.js App)    │
                       │                             │
                       │  ┌───────────────────────┐  │
-                      │  │     Middleware         │  │
+                      │  │     Proxy (proxy.ts)   │  │
                       │  │  • Subdomain parsing   │  │
                       │  │  • Tenant resolution   │  │
                       │  │  • Auth gate           │  │
@@ -329,20 +387,18 @@ Container max-width: 1200px (centered, px-6 on mobile)
 Browser requests: kamel.getfolio.dev
           │
           ▼
-Middleware (middleware.ts)
+Proxy (src/proxy.ts — Next 16's name for middleware)
   1. Parse hostname → extract "kamel"
-  2. Check if subdomain is reserved (www, app, api, admin)
-  3. Set x-tenant-slug header = "kamel"
-  4. Continue to Next.js routing
+  2. Skip reserved subdomains (www, app, api, admin, …)
+  3. Rewrite the request to /sites/kamel/<path>
           │
           ▼
-Portfolio Route Handler (/[tenant]/page.tsx or catch-all)
-  1. Read x-tenant-slug from headers
-  2. Query Supabase: SELECT * FROM tenants WHERE slug = 'kamel'
-  3. If not found → 404 page
-  4. If found → fetch profile, projects, experiences, skills WHERE user_id = tenant.user_id
-  5. Fetch tenant's theme_config (colors, font choices)
-  6. Render portfolio with tenant's data and theme
+Portfolio route (src/app/sites/[slug]/page.tsx)
+  1. Read slug from route params
+  2. Look up the tenant with the service-role client (tenants are not publicly readable)
+  3. Not found → not-found.tsx · plan = 'none' or inactive → <PortfolioOffline />
+  4. Live → fetch profile, projects, experiences, skills, theme_config WHERE tenant_id = tenant.id
+  5. Render portfolio with tenant's data and theme
           │
           ▼
 ISR-cached HTML response (revalidate = 60)
@@ -354,16 +410,17 @@ ISR-cached HTML response (revalidate = 60)
 Browser requests: getfolio.dev/dashboard
           │
           ▼
-Middleware
-  1. Check auth session
-  2. If no session → redirect to /login
-  3. If session → continue
+Proxy (optimistic guard only)
+  1. Refresh the session cookie; verify the JWT with getClaims()
+  2. No session → redirect to /login?next=/dashboard…
+  3. Signed-in user on /login or /signup → redirect to /dashboard
           │
           ▼
-Dashboard Layout
-  1. Fetch user from Supabase Auth
-  2. Fetch tenant record WHERE user_id = auth.user.id
+Dashboard Layout (the real check — proxy is never the only line of defence)
+  1. getUser() against Supabase Auth (cached per request: lib/data/tenant.ts → getCurrentTenant)
+  2. Fetch tenant + profile WHERE user_id = auth.user.id
   3. Render sidebar + content
+  (RLS enforces tenant isolation on every query regardless)
 ```
 
 ---
@@ -387,6 +444,15 @@ auth.users (Supabase managed)
 
 ## Table Definitions
 
+> **The authoritative, runnable schema is `supabase/schema.sql`.** The SQL below is the design reference; the file differs from it in these deliberate ways:
+>
+> - `gen_random_uuid()` instead of `uuid_generate_v4()` (built in; no extension needed).
+> - `tenants.plan` / `subscriptions.plan` default to `'none'` and are CHECK-constrained to `none | starter | pro`.
+> - **Signup trigger** `handle_new_user()` on `auth.users`: reads `slug` + `full_name` from the signup metadata and creates the `tenants`, `profiles` and `theme_configs` rows. It runs in the database so it works while email confirmation is pending (no session yet). A taken/invalid/reserved slug makes the insert fail, which rejects the signup.
+> - Helper functions `owns_tenant(tid)` and `tenant_is_live(tid)` (SECURITY DEFINER) keep the policies short and avoid RLS recursion.
+> - `updated_at` is maintained by a trigger.
+> - Security changes are described under [Security Architecture](#security-architecture).
+
 ### tenants
 
 The central table that links a Supabase auth user to their portfolio identity.
@@ -397,7 +463,7 @@ CREATE TABLE public.tenants (
   user_id       UUID UNIQUE NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
   slug          TEXT UNIQUE NOT NULL,                    -- subdomain: slug.getfolio.dev
   custom_domain TEXT UNIQUE,                             -- Pro: yourdomain.com
-  plan          TEXT NOT NULL DEFAULT 'free',             -- free | starter | pro
+  plan          TEXT NOT NULL DEFAULT 'none',             -- none (unpaid, cannot publish) | starter | pro
   onboarding    TEXT NOT NULL DEFAULT 'pending',         -- pending | in_progress | completed
   active        BOOLEAN NOT NULL DEFAULT true,
   created_at    TIMESTAMPTZ DEFAULT now() NOT NULL,
@@ -545,7 +611,7 @@ CREATE TABLE public.subscriptions (
   tenant_id             UUID UNIQUE NOT NULL REFERENCES public.tenants(id) ON DELETE CASCADE,
   ls_subscription_id    TEXT,                             -- Lemon Squeezy subscription ID
   ls_customer_id        TEXT,                             -- Lemon Squeezy customer ID
-  plan                  TEXT NOT NULL DEFAULT 'free',
+  plan                  TEXT NOT NULL DEFAULT 'none',     -- none | starter | pro
   status                TEXT NOT NULL DEFAULT 'active',   -- active | cancelled | past_due | expired
   current_period_start  TIMESTAMPTZ,
   current_period_end    TIMESTAMPTZ,
@@ -572,40 +638,27 @@ blog, docs, help, support, status, cdn, assets,
 staging, dev, test, beta, demo
 ```
 
-### Middleware Logic
+### Proxy Logic (`src/proxy.ts`)
+
+> Next.js 16 renamed `middleware.ts` to **`proxy.ts`** (exported function `proxy`). Same job, new name.
 
 ```typescript
-// Pseudocode for middleware.ts
+export async function proxy(request: NextRequest) {
+  const slug = tenantSlugFromHost(request.headers.get("host")); // null for root / www / reserved / *.vercel.app
 
-export async function middleware(request: NextRequest) {
-  const hostname = request.headers.get('host') || '';
-  const mainDomain = 'getfolio.dev';
+  // 1. Tenant portfolio:  lina.getfolio.dev/x  →  /sites/lina/x
+  if (slug) return NextResponse.rewrite(/* url with pathname = `/sites/${slug}${pathname}` */);
 
-  // Extract subdomain
-  const subdomain = hostname.replace(`.${mainDomain}`, '');
-  const isSubdomain = hostname !== mainDomain
-                      && hostname !== `www.${mainDomain}`
-                      && subdomain !== hostname;
-
-  if (isSubdomain && !RESERVED_SUBDOMAINS.includes(subdomain)) {
-    // This is a tenant portfolio request
-    // Set header so the page route can read it
-    const response = NextResponse.rewrite(
-      new URL(`/_portfolio/${subdomain}${request.nextUrl.pathname}`, request.url)
-    );
-    response.headers.set('x-tenant-slug', subdomain);
-    return response;
-  }
-
-  // Otherwise: normal routing (marketing, dashboard, auth)
-  // Auth checks for /dashboard/* routes
-  if (request.nextUrl.pathname.startsWith('/dashboard')) {
-    // Check Supabase session, redirect to /login if missing
-  }
-
-  return NextResponse.next();
+  // 2. /sites/* is an internal rewrite target — 404 if hit directly on the main domain
+  // 3. Refresh Supabase session (updateSession → getClaims), then:
+  //      /dashboard/*                  and no session  → redirect /login?next=…
+  //      /login /signup /forgot-password and session   → redirect /dashboard
 }
 ```
+
+- Root domain comes from `NEXT_PUBLIC_ROOT_DOMAIN` (default `getfolio.dev`; use `localhost:3000` locally, then `lina.localhost:3000` works in browsers).
+- Slug validation + the reserved list live in `src/lib/utils/slug.ts` (mirrored in `supabase/schema.sql`).
+- **The portfolio route is `app/sites/[slug]`, not `app/_portfolio`** — in the App Router a folder prefixed with `_` is a *private folder* and is excluded from routing, so a rewrite to it would 404.
 
 ### DNS Setup (Cloudflare)
 
@@ -629,7 +682,10 @@ Vercel Pro project configured with:
 Step 1: Account Creation
   └── Email + Password + Full Name
   └── Choose username (becomes subdomain: username.getfolio.dev)
-  └── Validate slug uniqueness in real-time
+  └── Validate slug uniqueness in real-time (SlugField → /api/tenant/check-slug, 400ms debounce)
+  └── Slug is pre-filled from the landing page "Claim your address" form (/signup?slug=…)
+  └── Server action creates the auth user; a DB trigger creates tenant + profile + theme
+  └── If email confirmation is on: "check your inbox" → /auth/callback → /dashboard
 
 Step 2: Content Source (choose one)
   ├── Option A: Upload CV (PDF / DOCX)
@@ -658,10 +714,16 @@ Step 3: Review Extracted Content
 
 Step 4: Choose Theme
   └── Show 5 preset palettes (live preview)
-  └── "Customize colors" toggle (Starter+ plans)
+  └── All 5 palettes + "Customize colors" (included in every plan)
   └── Pick layout variant (if multiple available)
 
-Step 5: Portfolio Live
+Step 5: Preview & Choose Plan
+  └── Full private preview of the portfolio (not publicly reachable)
+  └── Pick Starter or Pro → Lemon Squeezy checkout
+  └── Slug pre-filled from the landing page "Claim your address" form (/signup?slug=…)
+  └── Plan pre-selected if user came from pricing (/signup?plan=starter|pro)
+
+Step 6: Portfolio Live (after successful payment webhook)
   └── Redirect to dashboard
   └── Show live URL prominently: username.getfolio.dev
   └── "Share" button with copy-to-clipboard
@@ -689,11 +751,13 @@ Each portfolio's visual identity is driven by CSS custom properties injected at 
 
 | ID | Name | Background | Surface | Text | Accent | Use |
 |---|---|---|---|---|---|---|
-| `warm-earth` | Warm Earth | #F7F6F2 | #FFFFFF | #1F1F1C | #D97757 | Your current palette |
+| `warm-earth` | Warm Earth | #F7F6F2 | #FFFFFF | #1F1F1C | #D97757 | Default for new tenants |
 | `midnight` | Midnight | #0F172A | #1E293B | #F1F5F9 | #38BDF8 | Dark mode, dev-oriented |
 | `forest` | Forest | #F8FAF5 | #FFFFFF | #1A2E1A | #4A7C59 | Natural, organic feel |
 | `slate-blue` | Slate Blue | #F8FAFC | #FFFFFF | #0F172A | #3B82F6 | Corporate, trustworthy |
 | `sand` | Sand | #FAF9F6 | #FFFFFF | #292524 | #B45309 | Warm, creative |
+
+All five palettes (and custom colours) are available on every plan. Definitions live in `src/lib/themes/palettes.ts`, which also exports `getPalette(id)` and `paletteVars(palette)` (returns the CSS variables as a `style` object — used by the landing page theme previews and later by the theme picker).
 
 Each preset defines the full set of CSS variables:
 
@@ -701,6 +765,7 @@ Each preset defines the full set of CSS variables:
 interface ThemePalette {
   id: string;
   name: string;
+  note: string;         // one-line description for the theme picker
   colors: {
     background: string;
     surface: string;
@@ -752,7 +817,7 @@ All portfolio components reference these variables — the same component code w
 
 ## AI Features by Tier
 
-| Feature | Free | Starter | Pro |
+| Feature | Before paying (onboarding) | Starter | Pro |
 |---|---|---|---|
 | CV parsing on signup | ✓ (1x) | ✓ (unlimited) | ✓ |
 | Interview-based generation | ✓ (1x) | ✓ | ✓ |
@@ -761,7 +826,7 @@ All portfolio components reference these variables — the same component code w
 
 ## Rate Limiting
 
-- Free tier: 1 AI call at signup, then locked
+- Unpaid accounts (`plan = 'none'`): 1 AI import during onboarding, then locked until a plan is chosen
 - Starter: 3 AI regeneration calls per calendar month
 - Pro: 20 AI calls per day
 
@@ -796,7 +861,7 @@ This is where users manage their portfolio content after onboarding. Accessible 
 ├── /dashboard/theme          Change palette, layout, fonts
 ├── /dashboard/import         Re-import from CV
 ├── /dashboard/settings       Account, subscription, custom domain
-└── /dashboard/analytics      View counts, referral sources (Starter+)
+└── /dashboard/analytics      View counts, referral sources (basic on Starter, full on Pro)
 ```
 
 ## Dashboard Overview Page
@@ -815,23 +880,24 @@ This is where users manage their portfolio content after onboarding. Accessible 
 │  Quick Actions                                        │
 │  [+ Add Project]  [Edit Profile]  [Change Theme]     │
 │                                                       │
-│  Plan: Free  [Upgrade to Starter — $4.99/mo]         │
+│  Plan: Starter  [Upgrade to Pro — $9.99/mo]          │
 └──────────────────────────────────────────────────────┘
 ```
 
-## Free Tier Limits (Enforced in Dashboard)
+## Plan Limits (Enforced in Dashboard)
 
-| Resource | Free | Starter | Pro |
+There is **no free tier**. Plan definitions live in `src/lib/payments/plans.ts` (single source for the pricing UI and enforcement).
+
+| Resource | Unpaid (`none`) | Starter | Pro |
 |---|---|---|---|
-| Published projects | 3 | Unlimited | Unlimited |
-| Experiences | 2 | Unlimited | Unlimited |
-| Skills | 10 | Unlimited | Unlimited |
-| Theme palettes | 2 (Warm Earth + Slate Blue) | All 5 + custom colors | All + full custom |
-| Watermark on portfolio | Yes | No | No |
+| Edit content & private preview | ✓ | ✓ | ✓ |
+| Public portfolio | ✗ (offline) | ✓ | ✓ |
+| Projects / experiences / skills | Unlimited | Unlimited | Unlimited |
+| Theme palettes | All 5 + custom | All 5 + custom colors | All + full custom |
 | Custom domain | No | No | Yes |
 | Analytics | No | Basic | Full |
 
-When a free-tier user tries to add a 4th project, show an upgrade prompt — not an error.
+When an unpaid user tries to publish, show the plan picker — not an error.
 
 ---
 
@@ -860,7 +926,7 @@ CREATE TABLE public.platform_admins (
 );
 ```
 
-Middleware checks: if route starts with `/admin`, verify user is in `platform_admins`.
+`proxy.ts` and the admin layout check: if the route starts with `/admin`, verify the user is in `platform_admins`.
 
 ---
 
@@ -895,18 +961,18 @@ Webhook handler:
      • subscription_created → update tenant plan + subscription record
      • subscription_updated → update period dates
      • subscription_cancelled → mark subscription as cancelled
-     • subscription_expired → downgrade tenant to free
+     • subscription_expired → set tenant plan to 'none' (portfolio goes offline)
   3. Revalidate affected paths
 ```
 
 ## Downgrade Logic
 
 When a subscription expires:
-1. Set `tenants.plan = 'free'`
+1. Set `tenants.plan = 'none'`
 2. Keep all content (never delete user data)
-3. Add watermark back to portfolio
+3. Take the public portfolio offline — the subdomain shows a neutral "This portfolio is offline" page
 4. Hide analytics from dashboard
-5. If > 3 published projects, keep them but show "Upgrade to publish more" in dashboard
+5. Dashboard stays accessible with a "Choose a plan to go live again" banner
 
 ---
 
@@ -926,7 +992,7 @@ When a subscription expires:
 
 ### Total Cost by Phase
 
-| Phase | Users | Infra Cost | Revenue (10% conversion) | Profit |
+| Phase | Users | Infra Cost | Revenue (10% of signups subscribe) | Profit |
 |---|---|---|---|---|
 | Beta | 0–100 | ~$25/mo | $0–$50 | — |
 | Launch | 100–500 | ~$50/mo | $50–$250 | $0–$200 |
@@ -950,10 +1016,14 @@ app/
 │   ├── login/page.tsx
 │   ├── signup/page.tsx
 │   ├── forgot-password/page.tsx
-│   └── layout.tsx               Minimal centered layout
+│   ├── reset-password/page.tsx
+│   ├── actions.ts               signUp, logIn, requestPasswordReset, resetPassword, signOut
+│   └── layout.tsx               Header + centered page frame (AuthShell)
+│
+├── auth/callback/route.ts       Email-link target: exchanges ?code for a session, then → ?next
 │
 ├── (dashboard)/                 Tenant dashboard (authenticated)
-│   ├── dashboard/page.tsx       Overview
+│   ├── dashboard/page.tsx       Overview (built)
 │   ├── dashboard/projects/      Project CRUD
 │   ├── dashboard/experience/    Experience CRUD
 │   ├── dashboard/skills/        Skills CRUD
@@ -962,15 +1032,16 @@ app/
 │   ├── dashboard/import/        CV import
 │   ├── dashboard/settings/      Account & subscription
 │   ├── dashboard/analytics/     Portfolio analytics
-│   └── layout.tsx               Dashboard sidebar layout
+│   └── layout.tsx               Auth check + sidebar layout (built)
 │
 ├── (onboarding)/                New user onboarding
 │   ├── onboarding/page.tsx      Multi-step wizard
 │   └── layout.tsx               Minimal centered layout
 │
-├── _portfolio/                  Internal rewrite target (not directly accessed)
+├── sites/                       Internal rewrite target for tenant subdomains (proxy.ts)
 │   └── [slug]/
-│       └── page.tsx             Renders tenant portfolio
+│       ├── page.tsx             Renders tenant portfolio (placeholder until Phase 3)
+│       └── not-found.tsx        Unclaimed address
 │
 ├── (admin)/                     Platform super admin
 │   ├── admin/page.tsx
@@ -986,6 +1057,7 @@ app/
 │   └── tenant/
 │       └── check-slug/route.ts
 │
+├── styleguide/page.tsx          Design-system reference (noindex)
 ├── layout.tsx                   Root layout
 └── globals.css                  Global styles
 ```
@@ -996,7 +1068,8 @@ app/
 |---|---|---|---|
 | POST | `/api/ai/parse-cv` | Required | Parse uploaded CV file |
 | POST | `/api/ai/generate` | Required | Generate content from interview answers |
-| GET | `/api/tenant/check-slug?slug=kamel` | None | Check if slug is available (signup form) |
+| GET | `/api/tenant/check-slug?slug=kamel` | None | `{ available: true|false|null, reason? }` — validates format/reserved words, then checks the DB. `null` = could not check (the DB unique constraint is the final authority) |
+| GET | `/auth/callback?code=…&next=…` | None | Completes email confirmation / password-reset links |
 | POST | `/api/webhooks/lemon-squeezy` | Webhook signature | Handle payment events |
 
 ## Server Actions (Next.js)
@@ -1035,54 +1108,45 @@ Every table with `tenant_id` uses identical RLS patterns:
 
 ### Public Portfolio Read Access
 
+Public content is visible **only while the tenant is live** (`plan <> 'none'` and `active`). An unpaid tenant's data is not readable through the API at all — not merely hidden by the UI.
+
 ```sql
--- Anyone can read published portfolio content
-CREATE POLICY "public_read_profiles"
-  ON public.profiles FOR SELECT
-  USING (true);
+CREATE POLICY public_read_profiles ON public.profiles FOR SELECT TO anon, authenticated
+  USING (public.tenant_is_live(tenant_id));
 
-CREATE POLICY "public_read_projects"
-  ON public.projects FOR SELECT
-  USING (published = true);
+CREATE POLICY public_read_projects ON public.projects FOR SELECT TO anon, authenticated
+  USING (published AND public.tenant_is_live(tenant_id));
 
-CREATE POLICY "public_read_experiences"
-  ON public.experiences FOR SELECT
-  USING (true);
-
-CREATE POLICY "public_read_skills"
-  ON public.skills FOR SELECT
-  USING (true);
+-- same for experiences, skills, theme_configs, project_technologies
 ```
 
 ### Tenant Write Access (Owner Only)
 
 ```sql
--- Users can only modify their own tenant's data
-CREATE POLICY "owner_all_profiles"
-  ON public.profiles FOR ALL TO authenticated
-  USING (
-    tenant_id IN (SELECT id FROM public.tenants WHERE user_id = auth.uid())
-  )
-  WITH CHECK (
-    tenant_id IN (SELECT id FROM public.tenants WHERE user_id = auth.uid())
-  );
+CREATE POLICY owner_all_profiles ON public.profiles FOR ALL TO authenticated
+  USING (public.owns_tenant(tenant_id)) WITH CHECK (public.owns_tenant(tenant_id));
 
--- Same pattern for projects, experiences, skills, theme_configs
+-- same pattern for projects, experiences, skills, theme_configs, project_technologies
 ```
+
+> **Always add `.eq("tenant_id", …)` to dashboard queries.** The public-read policies are OR-ed with the owner policy, so an unfiltered query by a signed-in user would also match *other* live tenants' rows.
 
 ### Tenant Table Access
 
 ```sql
--- Users can only see/edit their own tenant
-CREATE POLICY "owner_select_tenant"
-  ON public.tenants FOR SELECT TO authenticated
-  USING (user_id = auth.uid());
+CREATE POLICY owner_select_tenant ON public.tenants FOR SELECT TO authenticated USING (user_id = auth.uid());
+CREATE POLICY owner_update_tenant ON public.tenants FOR UPDATE TO authenticated
+  USING (user_id = auth.uid()) WITH CHECK (user_id = auth.uid());
 
-CREATE POLICY "owner_update_tenant"
-  ON public.tenants FOR UPDATE TO authenticated
-  USING (user_id = auth.uid())
-  WITH CHECK (user_id = auth.uid());
+REVOKE INSERT, UPDATE, DELETE ON public.tenants FROM anon, authenticated;
+GRANT UPDATE (onboarding) ON public.tenants TO authenticated;   -- the ONLY column a user may change
 ```
+
+**Why the column grant matters:** without it a user could run `update tenants set plan = 'pro'` from the browser console and upgrade themselves for free. `plan`, `slug`, `active` and `custom_domain` change only from server code using the service-role client (payment webhook, slug change, admin panel). Likewise `subscriptions` and `ai_usage` are read-only for owners, and `platform_admins` has no policies (service role only).
+
+### Service-role client
+
+`src/lib/supabase/admin.ts` bypasses RLS. It is used for: slug availability (`/api/tenant/check-slug`), the signup pre-check, public tenant lookup by slug, and (later) webhooks and the admin panel. Server-side only; select explicit columns.
 
 ## Storage Bucket Policies
 
@@ -1106,13 +1170,15 @@ CREATE POLICY "public_read_images"
 
 - CSRF protection via Server Actions (automatic in Next.js)
 - Lemon Squeezy webhook signature verification (HMAC-SHA256)
-- Rate limiting on AI endpoints (via middleware or Vercel edge config)
+- Rate limiting on AI endpoints and `/api/tenant/check-slug` (via proxy or Vercel edge config)
 - Environment secrets: `SUPABASE_SERVICE_ROLE_KEY`, `GEMINI_API_KEY`, `LEMON_SQUEEZY_WEBHOOK_SECRET` — never exposed client-side
 - All `NEXT_PUBLIC_*` variables contain only public-safe values
 
 ---
 
 # File & Folder Structure
+
+> Application code lives under `src/` (`src/app`, `src/components`, `src/lib`); the tree below omits that prefix. Component files use kebab-case, matching the shadcn convention.
 
 ```
 folio/
@@ -1153,7 +1219,7 @@ folio/
 │   │   ├── actions.ts                  All dashboard server actions
 │   │   └── layout.tsx                  Sidebar layout
 │   │
-│   ├── _portfolio/
+│   ├── sites/                          Rewrite target for slug.getfolio.dev
 │   │   └── [slug]/
 │   │       ├── page.tsx                Render tenant portfolio
 │   │       └── not-found.tsx           404 for invalid slugs
@@ -1175,21 +1241,41 @@ folio/
 │   │   └── tenant/
 │   │       └── check-slug/route.ts
 │   │
-│   ├── layout.tsx                      Root layout
-│   ├── globals.css
+│   ├── styleguide/page.tsx             Design system reference (noindex)
+│   ├── layout.tsx                      Root layout (loads the 3 fonts)
+│   ├── globals.css                     Tokens + editorial utilities
 │   ├── icon.svg
 │   ├── robots.ts
 │   └── sitemap.ts
 │
 ├── components/
-│   ├── marketing/                      Landing page components
-│   │   ├── MarketingNavbar.tsx
-│   │   ├── MarketingHero.tsx
-│   │   ├── FeatureGrid.tsx
-│   │   ├── PricingCards.tsx
-│   │   └── MarketingFooter.tsx
+│   ├── layout/                         Shared page grammar (used by EVERY page)
+│   │   └── section.tsx                 Eyebrow, SectionHeader, Section, PageHeader
+│   │
+│   ├── marketing/                      Landing page components (kebab-case files)
+│   │   ├── marketing-navbar.tsx
+│   │   ├── marketing-footer.tsx
+│   │   ├── marketing-hero.tsx          00 — hero + facts strip
+│   │   ├── how-it-works.tsx            01 — three steps with mini UI artifacts
+│   │   ├── feature-index.tsx           02 — features as a ruled table of contents
+│   │   ├── theme-gallery.tsx           03 — all palettes rendered live
+│   │   ├── principles.tsx              04 — "what we leave out"
+│   │   ├── pricing-table.tsx           PricingGrid: "before you pay" + Starter / Pro (used on /pricing)
+│   │   ├── faq-list.tsx                Ruled Q&A list (used on /pricing)
+│   │   ├── closing-cta.tsx             05 — ink band with claim form (index prop; 02 on /pricing)
+│   │   ├── claim-form.tsx              "Claim your address" → GET /signup?slug=
+│   │   └── portfolio-specimen.tsx      Mini portfolio rendered in any palette
+│   │
+│   ├── auth/                           Auth screens
+│   │   ├── auth-shell.tsx              AuthShell + AsideList (shared frame for all auth pages)
+│   │   ├── login-form.tsx · signup-form.tsx · forgot-password-form.tsx · reset-password-form.tsx
+│   │   ├── slug-field.tsx              Address input with live availability check
+│   │   ├── submit-button.tsx           Pending-aware submit (useFormStatus)
+│   │   └── form-message.tsx            Form-level error / success notice
 │   │
 │   ├── dashboard/                      Dashboard components
+│   │   ├── dashboard-sidebar.tsx       Built: address + status, nav, sign out
+│   │   ├── dashboard-nav.tsx           Built: active state; unbuilt sections show "Soon"
 │   │   ├── DashboardSidebar.tsx
 │   │   ├── StatsCards.tsx
 │   │   ├── ProjectForm.tsx
@@ -1209,6 +1295,7 @@ folio/
 │   │   ├── StepContentSource.tsx
 │   │   ├── StepReview.tsx
 │   │   ├── StepTheme.tsx
+│   │   ├── StepPlan.tsx                Preview + choose Starter / Pro
 │   │   └── StepComplete.tsx
 │   │
 │   ├── portfolio/                      Portfolio rendering components
@@ -1220,24 +1307,29 @@ folio/
 │   │   ├── PortfolioContact.tsx
 │   │   ├── PortfolioNavbar.tsx
 │   │   ├── PortfolioFooter.tsx
-│   │   └── FolioWatermark.tsx          (free tier branding)
+│   │   └── PortfolioOffline.tsx        Shown when tenant plan = 'none'
 │   │
-│   └── ui/                             Shared UI primitives
-│       ├── Button.tsx
-│       ├── Input.tsx
-│       ├── Container.tsx
-│       ├── Card.tsx
-│       ├── Badge.tsx
-│       ├── Modal.tsx
-│       ├── Icons.tsx
-│       └── Skeleton.tsx
+│   └── ui/                             Shared UI primitives (kebab-case files)
+│       ├── button.tsx                  + buttonVariants() for links
+│       ├── input.tsx                   Input + Textarea
+│       ├── container.tsx
+│       ├── card.tsx
+│       ├── badge.tsx
+│       ├── wordmark.tsx                "folio." brand mark
+│       ├── modal.tsx
+│       ├── icons.tsx
+│       └── skeleton.tsx
 │
 ├── lib/
 │   ├── supabase/
-│   │   ├── server.ts                   Server-side Supabase client
-│   │   └── client.ts                   Browser-side Supabase client
+│   │   ├── env.ts                      getSupabaseEnv / isSupabaseConfigured / isAdminConfigured
+│   │   ├── server.ts                   Server-side client (acts as the signed-in user)
+│   │   ├── client.ts                   Browser-side client
+│   │   ├── admin.ts                    Service-role client (bypasses RLS; server only)
+│   │   └── proxy.ts                    updateSession() for src/proxy.ts
+│   ├── config.ts                       ROOT_DOMAIN, SITE_URL
 │   ├── data/
-│   │   ├── tenant.ts                   getTenantBySlug, getTenantByUserId
+│   │   ├── tenant.ts                   getCurrentTenant (cached), getTenantBySlug
 │   │   ├── profile.ts                  getProfileByTenantId
 │   │   ├── projects.ts                 getProjectsByTenantId
 │   │   ├── experience.ts               getExperiencesByTenantId
@@ -1254,12 +1346,13 @@ folio/
 │   │   └── palettes.ts                 Palette definitions
 │   └── utils/
 │       ├── date.ts                     (migrated)
-│       └── slug.ts                     Slug generation and validation
+│       ├── slug.ts                     RESERVED_SLUGS, normalizeSlug, validateSlug
+│       └── url.ts                      safeNext (open-redirect guard for ?next=)
 │
 ├── types/
 │   └── index.ts                        All TypeScript interfaces
 │
-├── middleware.ts                        Subdomain routing + auth checks
+├── proxy.ts                             Subdomain rewrite + auth guard (Next 16; formerly middleware.ts)
 │
 ├── supabase/
 │   └── schema.sql                      Complete multi-tenant schema
@@ -1268,13 +1361,42 @@ folio/
 │   ├── favicon/
 │   └── images/
 │
-├── .env.local
+├── .env.example                         Template for .env.local (committed)
+├── .env.local                           Real keys (git-ignored)
 ├── .gitignore
 ├── package.json
 ├── tsconfig.json
 ├── next.config.ts
 └── README.md
 ```
+
+---
+
+# Supabase Setup
+
+One-time setup for a new environment. Nothing here needs code changes.
+
+1. **Create a project** at supabase.com → *New project*. Name it `folio` (separate from any personal-portfolio project), pick the region closest to your users, and save the database password somewhere safe.
+2. **Run the schema:** *SQL Editor → New query* → paste all of `supabase/schema.sql` → *Run*. It is safe to re-run. Verify under *Table Editor* that `tenants`, `profiles`, `projects`, … exist, and under *Storage* that the `portfolio-images` bucket exists.
+3. **Auth settings** (*Authentication*):
+   - *Sign In / Providers → Email*: enabled. *Confirm email* is your choice: **on** is the production setting; **off** lets you test signup without opening an inbox.
+   - *URL Configuration*: **Site URL** = `http://localhost:3000` (switch to `https://getfolio.dev` for production). **Redirect URLs** → add `http://localhost:3000/auth/callback` (and `https://getfolio.dev/auth/callback` for production).
+4. **Copy the keys** from *Project Settings → API* (or *API Keys*): the Project URL, the `anon` / *publishable* key, and the `service_role` / *secret* key.
+5. **Create `.env.local`** in the project root from `.env.example` and fill in the three Supabase values. Restart `npm run dev`.
+
+| Variable | Exposed to browser? | Notes |
+|---|---|---|
+| `NEXT_PUBLIC_SUPABASE_URL` | yes | Project URL |
+| `NEXT_PUBLIC_SUPABASE_ANON_KEY` | yes | anon / publishable key; protected by RLS |
+| `SUPABASE_SERVICE_ROLE_KEY` | **no — server only** | Bypasses RLS. Never commit it, never prefix it with `NEXT_PUBLIC_`, never paste it in chat or tickets |
+| `NEXT_PUBLIC_SITE_URL` | yes | Origin used in email links (`http://localhost:3000` locally) |
+| `NEXT_PUBLIC_ROOT_DOMAIN` | yes | `localhost:3000` locally (so `lina.localhost:3000` works); `getfolio.dev` in production |
+
+Without these keys the app still runs: auth screens show a "not connected to Supabase" notice and `/dashboard` redirects to `/login`.
+
+**Testing a subdomain locally:** with `NEXT_PUBLIC_ROOT_DOMAIN=localhost:3000`, open `http://lina.localhost:3000`. Chrome, Edge and Firefox resolve `*.localhost` to your machine automatically.
+
+**Manually activating a plan (until Phase 6 payments exist):** in the SQL Editor run `update public.tenants set plan = 'starter' where slug = 'lina';` and the subdomain switches from the offline page to the live placeholder.
 
 ---
 
@@ -1286,13 +1408,14 @@ folio/
 > Start a new Next.js project from scratch. Do **not** try to refactor the portfolio codebase in-place — it's faster and cleaner to build fresh and migrate the reusable pieces (CV parser, form components, Supabase patterns).
 
 - [ ] Initialize new Next.js 16 project with TypeScript + Tailwind
-- [ ] Configure Supabase project (new project, not shared with personal portfolio)
+- [x] Configure Supabase project (new project, not shared with personal portfolio) — see [Supabase Setup](#supabase-setup)
 - [ ] Set up Cloudflare DNS for chosen domain
 - [ ] Connect Vercel Pro with wildcard domain
-- [ ] Set up environment variables (Supabase, Gemini, Lemon Squeezy)
-- [ ] Implement global design system in `globals.css` (platform palette, typography, spacing)
-- [ ] Build shared UI components: Button, Input, Card, Container, Modal, Badge
-- [ ] Run complete database schema (multi-tenant) on Supabase
+- [x] Set up environment variables (Supabase done; Gemini, Lemon Squeezy later) — template in `.env.example`
+- [x] Implement global design system in `globals.css` (Paper & Vermilion palette, 3-font typography, page grammar)
+- [x] Build shared UI components: Button, Input, Card, Container, Badge, Skeleton, Wordmark (Modal still to do)
+- [x] Write complete multi-tenant schema (`supabase/schema.sql`)
+- [x] Run `supabase/schema.sql` on the Supabase project (verified: 10 tables, storage bucket, signup trigger, RLS)
 
 ### What to migrate from kamelportfolio
 
@@ -1304,24 +1427,24 @@ folio/
 | `components/admin/ImageDropzone.tsx` | Copy → `components/dashboard/ImageDropzone.tsx` |
 | `components/admin/DeleteButton.tsx` | Copy → `components/dashboard/DeleteButton.tsx` |
 | `components/admin/SubmitButton.tsx` | Copy → `components/dashboard/SubmitButton.tsx` |
-| `lib/supabase/server.ts` | Copy as-is |
-| `lib/supabase/client.ts` | Copy as-is |
+| `lib/supabase/server.ts` | Superseded — rewritten for `@supabase/ssr` 0.12 with `getAll`/`setAll` cookies |
+| `lib/supabase/client.ts` | Superseded — see above |
 | `lib/utils/date.ts` | Copy as-is |
 
 ---
 
 ## Phase 1 — Core Multi-Tenancy + Auth (Weeks 2–3)
 
-- [ ] Implement middleware with subdomain parsing
-- [ ] Implement signup flow (email + password + slug selection)
-- [ ] Implement login/logout
-- [ ] Implement forgot-password
-- [ ] Create `tenants` record on signup
-- [ ] Create `profiles` record on signup (minimal: name from signup form)
-- [ ] Build real-time slug availability checker (`/api/tenant/check-slug`)
-- [ ] Dashboard layout with sidebar navigation
-- [ ] Dashboard overview page (stats cards, live link)
-- [ ] Test: signup → login → see dashboard → visit subdomain → see empty portfolio
+- [x] Implement proxy.ts with subdomain parsing + auth guard
+- [x] Implement signup flow (email + password + slug selection) — *built; needs Supabase keys to test*
+- [x] Implement login/logout
+- [x] Implement forgot-password + reset-password + `/auth/callback`
+- [x] Create `tenants` / `profiles` / `theme_configs` records on signup (DB trigger in `schema.sql`)
+- [x] Build real-time slug availability checker (`/api/tenant/check-slug`)
+- [x] Dashboard layout with sidebar navigation
+- [x] Dashboard overview page (address, status, counts, next steps)
+- [x] `/sites/[slug]` with offline + not-found states (full portfolio is Phase 3)
+- [x] Test end to end with a real Supabase project: signup → dashboard → visit `slug.localhost:3000` → "offline" page → set plan → live → sign out → guards → login. *(Passed 21/21 in a headless browser. Note: email confirmation is currently OFF in Supabase, so signup logs you straight in; turn it ON before launch and re-test the "check your inbox" → `/auth/callback` path with a real inbox.)*
 
 ---
 
@@ -1332,14 +1455,14 @@ folio/
 - [ ] Experience CRUD (list, create, edit, delete, reorder)
 - [ ] Skills CRUD (list, add, delete, categorize)
 - [ ] All server actions scoped to `tenant_id`
-- [ ] Free tier limit enforcement (3 projects, 2 experiences, 10 skills)
+- [ ] Publishing gate: unpaid tenants (`plan = 'none'`) can edit and preview but not publish
 - [ ] Test: full CRUD cycle, verify data isolation between tenants
 
 ---
 
 ## Phase 3 — Portfolio Rendering (Weeks 4–5)
 
-- [ ] Portfolio page component (`_portfolio/[slug]/page.tsx`)
+- [ ] Portfolio page component (`sites/[slug]/page.tsx`; placeholder + offline/404 states already exist)
 - [ ] Port and adapt portfolio components from kamelportfolio:
   - [ ] PortfolioNavbar
   - [ ] PortfolioHero
@@ -1350,7 +1473,7 @@ folio/
   - [ ] PortfolioContact
   - [ ] PortfolioFooter
 - [ ] Theme injection (CSS variables from `theme_configs`)
-- [ ] FolioWatermark component (free tier)
+- [ ] PortfolioOffline page for tenants without an active plan
 - [ ] Dynamic SEO metadata per tenant (title, description, Open Graph)
 - [ ] ISR caching with `revalidate = 60`
 - [ ] 404 page for invalid subdomains
@@ -1393,7 +1516,7 @@ folio/
 - [ ] Implement Lemon Squeezy checkout link generation
 - [ ] Implement webhook handler (`/api/webhooks/lemon-squeezy`)
 - [ ] Subscription status tracking in `subscriptions` table
-- [ ] Plan enforcement logic (watermark, limits, feature gates)
+- [ ] Plan enforcement logic (publishing gate, AI limits, custom domain, analytics)
 - [ ] Downgrade logic when subscription expires
 - [ ] Test: full payment cycle (use Lemon Squeezy test mode)
 
@@ -1401,9 +1524,9 @@ folio/
 
 ## Phase 7 — Marketing Site (Week 9)
 
-- [ ] Landing page (hero, features, how-it-works, testimonials placeholder, CTA)
-- [ ] Pricing page (free / starter / pro comparison)
-- [ ] Marketing navbar and footer
+- [x] Landing page (hero + claim form, how-it-works, features, themes, house style, closing CTA; pricing lives on /pricing)
+- [x] Pricing page (`/pricing`: Before you pay + Starter / Pro + FAQ; the landing page links to it instead of repeating it)
+- [x] Marketing navbar and footer
 - [ ] SEO: meta tags, Open Graph, sitemap, robots.txt
 - [ ] Favicon and brand assets
 
@@ -1413,7 +1536,7 @@ folio/
 
 - [ ] Settings page (change password, delete account, manage subscription)
 - [ ] Email integration (Resend: welcome email, password reset)
-- [ ] Portfolio analytics (basic view counter, tracked via middleware)
+- [ ] Portfolio analytics (basic view counter, tracked via proxy)
 - [ ] Error handling and loading states across all pages
 - [ ] Mobile responsiveness audit (dashboard + portfolio)
 - [ ] Accessibility audit (keyboard nav, contrast, ARIA)
