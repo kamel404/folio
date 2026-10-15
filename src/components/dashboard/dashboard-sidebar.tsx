@@ -2,11 +2,12 @@ import { signOut } from "@/app/(auth)/actions";
 import { Wordmark } from "@/components/ui/wordmark";
 import { DashboardNav } from "@/components/dashboard/dashboard-nav";
 import { ROOT_DOMAIN } from "@/lib/config";
+import { isLive } from "@/lib/payments/plans";
 import type { CurrentTenant } from "@/types";
 
 function DashboardSidebar({ current }: { current: CurrentTenant }) {
   const { tenant, user, name } = current;
-  const live = tenant.plan !== "none" && tenant.active;
+  const live = isLive(tenant);
 
   return (
     <aside className="border-b border-[var(--border)] bg-[var(--surface)] lg:sticky lg:top-0 lg:h-screen lg:w-64 lg:shrink-0 lg:border-b-0 lg:border-r">

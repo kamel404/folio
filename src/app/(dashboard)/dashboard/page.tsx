@@ -8,6 +8,8 @@ import { getCurrentTenant } from "@/lib/data/tenant";
 import { createClient } from "@/lib/supabase/server";
 import { ROOT_DOMAIN } from "@/lib/config";
 import { cn } from "@/lib/utils";
+import { isLive } from "@/lib/payments/plans";
+import { PublishButton } from "@/components/dashboard/publish-button";
 
 export const metadata = { title: "Overview" };
 
@@ -25,7 +27,7 @@ export default async function DashboardOverview() {
   if (!current) redirect("/login");
 
   const { tenant, name } = current;
-  const live = tenant.plan !== "none" && tenant.active;
+  const live = isLive(tenant);
   const [projects, experiences, skills] = await Promise.all([
     countRows("projects", tenant.id),
     countRows("experiences", tenant.id),
@@ -41,11 +43,24 @@ export default async function DashboardOverview() {
 
   const nextSteps = [
     { title: "Import your CV", body: "Fill in your profile in one go.", soon: true },
-    { title: "Review and edit your content", body: "Profile, projects, experience and skills.", soon: true },
+    {
+      title: "Fill in your profile",
+      body: "Name, headline, photo, bio and links.",
+      href: "/dashboard/profile",
+      cta: "Edit profile",
+    },
+    {
+      title: "Add your work",
+      body: "Projects, experience and skills.",
+      href: projects === 0 ? "/dashboard/projects/new" : "/dashboard/projects",
+      cta: projects === 0 ? "Add a project" : "Manage projects",
+      done: projects > 0 && experiences > 0 && skills > 0,
+    },
     {
       title: "Choose a plan to go live",
       body: "Starter or Pro. You only pay to publish.",
       href: "/pricing",
+      cta: "See plans",
       done: live,
     },
   ];
@@ -66,6 +81,7 @@ export default async function DashboardOverview() {
             ? "Your portfolio is live. Changes you make show up within a minute."
             : "Your portfolio is private until you choose a plan. Build it first, then publish when you're ready."
         }
+        actions={<PublishButton tenant={tenant} />}
       />
 
       <Container className="pb-20">
@@ -126,7 +142,7 @@ export default async function DashboardOverview() {
                 </div>
                 {step.href && !step.done && (
                   <Link href={step.href} className={buttonVariants({ variant: "secondary", size: "sm" })}>
-                    See plans
+                    {step.cta}
                   </Link>
                 )}
                 {step.soon && <Badge variant="outline">Soon</Badge>}

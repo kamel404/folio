@@ -2,6 +2,8 @@
  * Folio has no free tier. Anyone can sign up, import a CV and preview
  * their portfolio privately; publishing requires Starter or Pro.
  */
+import type { Tenant } from "@/types";
+
 export type PlanId = "starter" | "pro";
 
 export interface Plan {
@@ -51,6 +53,20 @@ export const plans: Plan[] = [
     limits: { aiRewrites: null, customDomain: true, analytics: "full" },
   },
 ];
+
+/**
+ * The publishing gate. Everyone can edit and preview; only a paid plan
+ * publishes. Mirrors tenant_is_live() in supabase/schema.sql, which enforces
+ * the same rule for public reads.
+ */
+export function canPublish(tenant: Pick<Tenant, "plan">): boolean {
+  return tenant.plan !== "none";
+}
+
+/** Publicly visible right now: a paid plan and not suspended. */
+export function isLive(tenant: Pick<Tenant, "plan" | "active">): boolean {
+  return canPublish(tenant) && tenant.active;
+}
 
 /** Lowest monthly price, for marketing copy ("from $4.99/month"). */
 export const startingPrice = Math.min(...plans.map((p) => p.monthly));

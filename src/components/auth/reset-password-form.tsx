@@ -1,9 +1,10 @@
 "use client";
 
 import { useActionState } from "react";
-import { resetPassword, type FormState } from "@/app/(auth)/actions";
+import { resetPassword } from "@/app/(auth)/actions";
+import type { FormState } from "@/lib/forms";
 import { Input } from "@/components/ui/input";
-import { FormMessage } from "@/components/auth/form-message";
+import { FormMessage } from "@/components/ui/form-message";
 import { SubmitButton } from "@/components/auth/submit-button";
 
 function ResetPasswordForm() {

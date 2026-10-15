@@ -43,7 +43,12 @@ export async function proxy(request: NextRequest) {
   // 2 ── Auth guard (main domain only)
   const { response, signedIn } = await updateSession(request);
 
-  if (pathname.startsWith("/dashboard") && !signedIn) {
+  // Server Action POSTs are let through: a redirect would reach the client as an
+  // unreadable response. Every action checks the session itself and answers
+  // "session expired" in a form the UI can show.
+  const isServerAction = request.method === "POST" && request.headers.has("next-action");
+
+  if (pathname.startsWith("/dashboard") && !signedIn && !isServerAction) {
     const login = new URL("/login", request.url);
     login.searchParams.set("next", pathname + search);
     return redirectWithCookies(login, response);

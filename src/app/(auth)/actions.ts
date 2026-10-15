@@ -8,26 +8,7 @@ import { isAdminConfigured, isSupabaseConfigured } from "@/lib/supabase/env";
 import { NOT_CONFIGURED_MESSAGE, SITE_URL } from "@/lib/config";
 import { normalizeSlug, validateSlug } from "@/lib/utils/slug";
 import { safeNext } from "@/lib/utils/url";
-
-export type FormState = {
-  error?: string;
-  fieldErrors?: Partial<Record<string, string>>;
-  /** Non-sensitive values to repopulate the form after an error */
-  values?: Partial<Record<string, string>>;
-  /** Set when the form finished without a redirect (e.g. "check your email") */
-  success?: string;
-};
-
-const text = (fd: FormData, key: string) => String(fd.get(key) ?? "");
-
-function fieldErrorsFrom(error: z.ZodError): Record<string, string> {
-  const out: Record<string, string> = {};
-  for (const issue of error.issues) {
-    const key = String(issue.path[0] ?? "form");
-    out[key] ??= issue.message;
-  }
-  return out;
-}
+import { fieldErrorsFrom, text, type FormState } from "@/lib/forms";
 
 const passwordRule = z
   .string()

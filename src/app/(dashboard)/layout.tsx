@@ -2,6 +2,7 @@ import { connection } from "next/server";
 import { redirect } from "next/navigation";
 import { Container } from "@/components/ui/container";
 import { DashboardSidebar } from "@/components/dashboard/dashboard-sidebar";
+import { Toaster } from "@/components/ui/toaster";
 import { signOut } from "@/app/(auth)/actions";
 import { getCurrentTenant } from "@/lib/data/tenant";
 import { createClient } from "@/lib/supabase/server";
@@ -39,6 +40,7 @@ export default async function DashboardLayout({ children }: LayoutProps<"/">) {
     <div className="flex min-h-screen flex-1 flex-col lg:flex-row">
       <DashboardSidebar current={current} />
       <main className="min-w-0 flex-1">{children}</main>
+      <Toaster />
     </div>
   );
 }

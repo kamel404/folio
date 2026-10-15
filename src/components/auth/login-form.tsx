@@ -2,9 +2,10 @@
 
 import Link from "next/link";
 import { useActionState } from "react";
-import { logIn, type FormState } from "@/app/(auth)/actions";
+import { logIn } from "@/app/(auth)/actions";
+import type { FormState } from "@/lib/forms";
 import { Input } from "@/components/ui/input";
-import { FormMessage } from "@/components/auth/form-message";
+import { FormMessage } from "@/components/ui/form-message";
 import { SubmitButton } from "@/components/auth/submit-button";
 
 interface LoginFormProps {

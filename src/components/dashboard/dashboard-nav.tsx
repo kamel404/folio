@@ -13,10 +13,10 @@ interface NavItem {
 
 const items: NavItem[] = [
   { href: "/dashboard", label: "Overview" },
-  { href: "/dashboard/profile", label: "Profile", soon: true },
-  { href: "/dashboard/projects", label: "Projects", soon: true },
-  { href: "/dashboard/experience", label: "Experience", soon: true },
-  { href: "/dashboard/skills", label: "Skills", soon: true },
+  { href: "/dashboard/profile", label: "Profile" },
+  { href: "/dashboard/projects", label: "Projects" },
+  { href: "/dashboard/experience", label: "Experience" },
+  { href: "/dashboard/skills", label: "Skills" },
   { href: "/dashboard/theme", label: "Theme", soon: true },
   { href: "/dashboard/import", label: "Import CV", soon: true },
   { href: "/dashboard/settings", label: "Settings", soon: true },
@@ -29,7 +29,9 @@ function DashboardNav() {
     <nav aria-label="Dashboard">
       <ul className="flex gap-1 overflow-x-auto lg:flex-col lg:gap-0.5 lg:overflow-visible">
         {items.map((item) => {
-          const active = pathname === item.href;
+          // Sections stay highlighted on their nested pages (/dashboard/projects/new, /[id])
+          const active =
+            pathname === item.href || (item.href !== "/dashboard" && pathname.startsWith(`${item.href}/`));
           const base =
             "flex items-center justify-between gap-3 whitespace-nowrap rounded-sm px-3 py-2 text-sm transition-colors duration-150";
 

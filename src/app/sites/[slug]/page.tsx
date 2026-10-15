@@ -4,6 +4,7 @@ import { Container } from "@/components/ui/container";
 import { Eyebrow } from "@/components/layout/section";
 import { PortfolioOffline } from "@/components/portfolio/portfolio-offline";
 import { getTenantBySlug } from "@/lib/data/tenant";
+import { isLive } from "@/lib/payments/plans";
 
 /**
  * Tenant portfolio. proxy.ts rewrites  slug.getfolio.dev/*  →  /sites/slug/*
@@ -17,7 +18,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { slug } = await params;
   const tenant = await getTenantBySlug(slug);
   // Never advertise unpublished portfolios
-  if (!tenant || tenant.plan === "none" || !tenant.active) {
+  if (!tenant || !isLive(tenant)) {
     return { title: "Offline", robots: { index: false } };
   }
   return { title: slug };
@@ -28,7 +29,7 @@ export default async function SitePage({ params }: Props) {
   const tenant = await getTenantBySlug(slug);
 
   if (!tenant) notFound();
-  if (tenant.plan === "none" || !tenant.active) return <PortfolioOffline />;
+  if (!isLive(tenant)) return <PortfolioOffline />;
 
   return (
     <main className="flex flex-1 items-center py-24">
