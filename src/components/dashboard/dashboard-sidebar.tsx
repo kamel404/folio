@@ -1,3 +1,5 @@
+import Link from "next/link";
+import { Eye } from "lucide-react";
 import { signOut } from "@/app/(auth)/actions";
 import { Wordmark } from "@/components/ui/wordmark";
 import { DashboardNav } from "@/components/dashboard/dashboard-nav";
@@ -36,6 +38,13 @@ function DashboardSidebar({ current }: { current: CurrentTenant }) {
               {live ? "Live" : "Offline · no plan"}
             </span>
           </p>
+          <Link
+            href="/preview"
+            className="mt-3 inline-flex items-center gap-1.5 text-sm text-[var(--text-secondary)] link-underline hover:text-[var(--foreground)]"
+          >
+            <Eye size={14} aria-hidden />
+            Preview your site
+          </Link>
         </div>
 
         <DashboardNav />

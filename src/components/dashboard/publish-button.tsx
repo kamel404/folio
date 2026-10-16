@@ -6,7 +6,7 @@ import { Button, buttonVariants } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Modal } from "@/components/ui/modal";
 import { plans, canPublish, isLive } from "@/lib/payments/plans";
-import { ROOT_DOMAIN } from "@/lib/config";
+import { tenantUrl } from "@/lib/config";
 import { cn } from "@/lib/utils";
 import type { Tenant } from "@/types";
 
@@ -17,8 +17,7 @@ import type { Tenant } from "@/types";
  */
 function PublishButton({ tenant, className }: { tenant: Tenant; className?: string }) {
   const [open, setOpen] = useState(false);
-  const protocol = ROOT_DOMAIN.startsWith("localhost") ? "http" : "https";
-  const siteUrl = `${protocol}://${tenant.slug}.${ROOT_DOMAIN}`;
+  const siteUrl = tenantUrl(tenant.slug);
 
   if (isLive(tenant)) {
     return (

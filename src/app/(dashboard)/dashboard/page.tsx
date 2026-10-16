@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
+import { Eye } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Container } from "@/components/ui/container";
 import { buttonVariants } from "@/components/ui/button";
@@ -81,7 +82,15 @@ export default async function DashboardOverview() {
             ? "Your portfolio is live. Changes you make show up within a minute."
             : "Your portfolio is private until you choose a plan. Build it first, then publish when you're ready."
         }
-        actions={<PublishButton tenant={tenant} />}
+        actions={
+          <div className="flex flex-wrap items-center gap-3">
+            <Link href="/preview" className={buttonVariants({ variant: "secondary" })}>
+              <Eye size={16} aria-hidden />
+              Preview
+            </Link>
+            <PublishButton tenant={tenant} />
+          </div>
+        }
       />
 
       <Container className="pb-20">

@@ -70,6 +70,23 @@ export interface Skill {
   sort_order: number;
 }
 
+/** The parts of theme_configs the portfolio uses today (fonts and layout variants come in Phase 4). */
+export interface ThemeConfig {
+  palette_id: string;
+  /** Pro: overrides for individual palette colours, keyed like ThemePalette["colors"] */
+  custom_colors: Record<string, unknown> | null;
+  show_photo: boolean;
+}
+
+/** Everything a portfolio page renders: only published projects, in display order. */
+export interface PortfolioContent {
+  profile: Profile;
+  projects: Project[];
+  experiences: Experience[];
+  skills: Skill[];
+  theme: ThemeConfig;
+}
+
 export interface CurrentTenant {
   user: { id: string; email: string };
   tenant: Tenant;

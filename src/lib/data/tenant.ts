@@ -2,6 +2,7 @@ import { cache } from "react";
 import { isAuthApiError, isAuthSessionMissingError, type AuthError } from "@supabase/supabase-js";
 import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
+import { siteTag } from "@/lib/supabase/public";
 import { isAdminConfigured, isSupabaseConfigured } from "@/lib/supabase/env";
 import type { CurrentTenant, Tenant } from "@/types";
 
@@ -49,14 +50,21 @@ export const getCurrentTenant = cache(async (): Promise<CurrentTenant | null> =>
   };
 });
 
-/** Public lookup by subdomain (service role — tenants aren't publicly readable). */
-export async function getTenantBySlug(slug: string): Promise<Tenant | null> {
+/**
+ * Public lookup by subdomain (service role — tenants aren't publicly readable).
+ * Cached per request (layout, page and metadata share it). A database error
+ * throws rather than returning null: null means "nobody owns this address",
+ * and ISR would cache that 404.
+ */
+export const getTenantBySlug = cache(async (slug: string): Promise<Tenant | null> => {
   if (!isAdminConfigured()) return null;
-  const admin = createAdminClient();
-  const { data } = await admin
+  // Tagged: a plan change (or suspension) must refresh the site through the same tag
+  const admin = createAdminClient({ cacheTags: [siteTag(slug)] });
+  const { data, error } = await admin
     .from("tenants")
     .select(TENANT_COLUMNS)
     .eq("slug", slug)
     .maybeSingle<Tenant>();
+  if (error) throw new Error(`Could not look up "${slug}": ${error.message}`);
   return data;
-}
+});

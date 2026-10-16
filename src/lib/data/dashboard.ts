@@ -3,6 +3,14 @@ import { notFound, redirect } from "next/navigation";
 import { z } from "zod";
 import { getCurrentTenant } from "@/lib/data/tenant";
 import { createClient } from "@/lib/supabase/server";
+import {
+  EXPERIENCE_COLUMNS,
+  PROFILE_COLUMNS,
+  PROJECT_COLUMNS,
+  SKILL_COLUMNS,
+  toProject,
+  type ProjectRow,
+} from "@/lib/data/columns";
 import type { CurrentTenant, Experience, Profile, Project, Skill } from "@/types";
 
 /**
@@ -43,9 +51,6 @@ export function parseId(id: string): string {
 
 /* ─── Profile ─── */
 
-const PROFILE_COLUMNS =
-  "id, tenant_id, name, title, short_bio, long_bio, email, phone, linkedin_url, github_url, cv_url, profile_image_url, location, availability_status, updated_at";
-
 export async function getProfile(tenantId: string): Promise<Profile> {
   const supabase = await createClient();
   const { data, error } = await supabase
@@ -59,22 +64,6 @@ export async function getProfile(tenantId: string): Promise<Profile> {
 }
 
 /* ─── Projects ─── */
-
-const PROJECT_COLUMNS =
-  "id, tenant_id, title, slug, short_description, description, image_url, github_url, live_url, category, featured, published, sort_order, project_technologies(technologies(name))";
-
-type ProjectRow = Omit<Project, "technologies"> & {
-  project_technologies: { technologies: { name: string } | null }[];
-};
-
-function toProject({ project_technologies, ...row }: ProjectRow): Project {
-  return {
-    ...row,
-    technologies: project_technologies
-      .flatMap((pt) => (pt.technologies ? [pt.technologies.name] : []))
-      .sort((a, b) => a.localeCompare(b)),
-  };
-}
 
 export async function listProjects(tenantId: string): Promise<Project[]> {
   const supabase = await createClient();
@@ -113,9 +102,6 @@ export async function listProjectCategories(tenantId: string): Promise<string[]>
 
 /* ─── Experience ─── */
 
-const EXPERIENCE_COLUMNS =
-  "id, tenant_id, company, position, description, start_date, end_date, current, sort_order";
-
 export async function listExperiences(tenantId: string): Promise<Experience[]> {
   const supabase = await createClient();
   const { data, error } = await supabase
@@ -149,7 +135,7 @@ export async function listSkills(tenantId: string): Promise<Skill[]> {
   const supabase = await createClient();
   const { data, error } = await supabase
     .from("skills")
-    .select("id, tenant_id, name, category, sort_order")
+    .select(SKILL_COLUMNS)
     .eq("tenant_id", tenantId)
     .order("sort_order")
     .order("name")

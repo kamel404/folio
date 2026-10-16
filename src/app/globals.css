@@ -178,6 +178,18 @@
   }
 }
 
+/* ─── Tenant portfolios ───
+   Portfolios are the user's site, not a Folio page: headings use the body
+   family, bold, instead of the platform serif. (Phase 4 adds font choice.) */
+@layer components {
+  .portfolio :is(h1, h2) {
+    font-family: var(--font-sans);
+    font-weight: 700;
+    letter-spacing: -0.025em;
+    line-height: 1.1;
+  }
+}
+
 /* ─── Editorial utilities ─── */
 
 /* The 12-column page grid every page is built on */

@@ -1,45 +1,30 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
-import { Container } from "@/components/ui/container";
-import { Eyebrow } from "@/components/layout/section";
 import { PortfolioOffline } from "@/components/portfolio/portfolio-offline";
-import { getTenantBySlug } from "@/lib/data/tenant";
-import { isLive } from "@/lib/payments/plans";
+import { PortfolioHome } from "@/components/portfolio/portfolio-page";
+import { getSite } from "@/lib/data/portfolio";
+import { hiddenMetadata, portfolioMetadata } from "@/lib/seo";
 
 /**
- * Tenant portfolio. proxy.ts rewrites  slug.getfolio.dev/*  →  /sites/slug/*
- * (this route is not reachable on the main domain).
- * Phase 3 replaces the placeholder below with the real portfolio components.
+ * A tenant's public portfolio. Cached for 60s (ISR); dashboard saves also
+ * revalidate it immediately (revalidateTenant in lib/data/mutations.ts).
  */
+export const revalidate = 60;
 
-type Props = { params: Promise<{ slug: string }> };
-
-export async function generateMetadata({ params }: Props): Promise<Metadata> {
+export async function generateMetadata({ params }: PageProps<"/sites/[slug]">): Promise<Metadata> {
   const { slug } = await params;
-  const tenant = await getTenantBySlug(slug);
+  const site = await getSite(slug);
+  if (site.status === "missing") return hiddenMetadata("Not found");
   // Never advertise unpublished portfolios
-  if (!tenant || !isLive(tenant)) {
-    return { title: "Offline", robots: { index: false } };
-  }
-  return { title: slug };
+  if (site.status === "offline") return hiddenMetadata("Offline");
+  return portfolioMetadata(site.tenant.slug, site.content);
 }
 
-export default async function SitePage({ params }: Props) {
+export default async function SitePage({ params }: PageProps<"/sites/[slug]">) {
   const { slug } = await params;
-  const tenant = await getTenantBySlug(slug);
+  const site = await getSite(slug);
 
-  if (!tenant) notFound();
-  if (!isLive(tenant)) return <PortfolioOffline />;
-
-  return (
-    <main className="flex flex-1 items-center py-24">
-      <Container size="sm">
-        <Eyebrow label="Portfolio" />
-        <h1 className="mt-6 text-[clamp(2.5rem,6vw,4.5rem)]">{tenant.slug}</h1>
-        <p className="mt-6 text-lg text-[var(--text-secondary)]">
-          This portfolio is live. Rendering arrives in Phase 3.
-        </p>
-      </Container>
-    </main>
-  );
+  if (site.status === "missing") notFound();
+  if (site.status === "offline") return <PortfolioOffline />;
+  return <PortfolioHome content={site.content} base="" />;
 }

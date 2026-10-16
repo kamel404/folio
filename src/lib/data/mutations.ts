@@ -1,4 +1,5 @@
-import { revalidatePath } from "next/cache";
+import { revalidatePath, updateTag } from "next/cache";
+import { siteTag } from "@/lib/supabase/public";
 import type { SupabaseClient } from "@supabase/supabase-js";
 
 /**
@@ -9,10 +10,18 @@ import type { SupabaseClient } from "@supabase/supabase-js";
 
 type OrderedTable = "projects" | "experiences" | "skills";
 
-/** Refresh the dashboard (sidebar counts/names) and the tenant's public site. */
+/**
+ * Refresh the dashboard (sidebar counts/names) and every page of the tenant's
+ * public site, including cached 404s of project URLs. Server Actions only
+ * (updateTag); a Route Handler such as the payment webhook must call
+ * revalidateTag(siteTag(slug), { expire: 0 }) instead.
+ *
+ * (revalidatePath can't do this: a literal "/sites/slug" with type "layout"
+ * matches nothing, and the "/sites/[slug]" pattern would refresh every tenant.)
+ */
 export function revalidateTenant(slug: string) {
   revalidatePath("/dashboard", "layout");
-  revalidatePath(`/sites/${slug}`, "layout");
+  updateTag(siteTag(slug));
 }
 
 /** sort_order for a new row: after everything that's already there. */

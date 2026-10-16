@@ -3,6 +3,8 @@
  * Each one maps 1:1 to the CSS variables injected on portfolio render.
  */
 
+import type { ThemeConfig } from "@/types";
+
 export interface ThemePalette {
   id: string;
   name: string;
@@ -100,6 +102,54 @@ export const palettes: ThemePalette[] = [
 
 export function getPalette(id: string): ThemePalette {
   return palettes.find((p) => p.id === id) ?? palettes[0];
+}
+
+const HEX_COLOR = /^#[0-9a-f]{6}$/i;
+
+/**
+ * The tenant's palette: the preset from theme_configs.palette_id, with any
+ * custom_colors laid over it. Custom values are user data, so only
+ * well-formed #RRGGBB strings are accepted — they end up inside a <style> tag.
+ */
+export function resolvePalette(config: Pick<ThemeConfig, "palette_id" | "custom_colors"> | null): ThemePalette {
+  const base = getPalette(config?.palette_id ?? "");
+  const custom = config?.custom_colors;
+  if (!custom || typeof custom !== "object") return base;
+
+  const colors = { ...base.colors };
+  for (const key of Object.keys(colors) as (keyof ThemePalette["colors"])[]) {
+    const value = custom[key];
+    if (typeof value === "string" && HEX_COLOR.test(value)) colors[key] = value;
+  }
+  return { ...base, colors };
+}
+
+/** WCAG relative luminance of a #RRGGBB colour. */
+function luminance(hex: string): number {
+  const [r, g, b] = [1, 3, 5].map((i) => {
+    const c = parseInt(hex.slice(i, i + 2), 16) / 255;
+    return c <= 0.03928 ? c / 12.92 : ((c + 0.055) / 1.055) ** 2.4;
+  });
+  return 0.2126 * r + 0.7152 * g + 0.0722 * b;
+}
+
+/** Near-black or white, whichever contrasts more with the given background. */
+export function readableOn(hex: string): string {
+  const l = luminance(hex);
+  return (l + 0.05) / 0.05 >= 1.05 / (l + 0.05) ? "#111111" : "#FFFFFF";
+}
+
+/**
+ * The palette as a `:root { … }` rule. Injected by the portfolio layouts so
+ * the whole page (body background, selection, focus rings) takes the theme.
+ * Every value is a validated hex colour, so the string is safe to inline.
+ */
+export function themeCss(palette: ThemePalette): string {
+  const vars = Object.entries(paletteVars(palette))
+    .map(([name, value]) => `${name}:${value};`)
+    .join("");
+  const dark = luminance(palette.colors.background) < 0.2;
+  return `:root{${vars}--accent-fg:${readableOn(palette.colors.accent)};color-scheme:${dark ? "dark" : "light"};}`;
 }
 
 /** CSS custom properties for a palette, ready for a `style` prop. */
