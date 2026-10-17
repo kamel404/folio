@@ -179,11 +179,17 @@
 }
 
 /* ─── Tenant portfolios ───
-   Portfolios are the user's site, not a Folio page: headings use the body
-   family, bold, instead of the platform serif. (Phase 4 adds font choice.) */
+   Portfolios are the user's site, not a Folio page: they use the typefaces
+   from their theme (--pf-font-*, set by themeVars) instead of the platform
+   serif, with bold display headings. Falls back to Inter. */
 @layer components {
+  .portfolio {
+    font-family: var(--pf-font-body, var(--font-inter), system-ui, sans-serif);
+  }
+  .portfolio :is(h1, h2, h3) {
+    font-family: var(--pf-font-heading, var(--font-inter), system-ui, sans-serif);
+  }
   .portfolio :is(h1, h2) {
-    font-family: var(--font-sans);
     font-weight: 700;
     letter-spacing: -0.025em;
     line-height: 1.1;

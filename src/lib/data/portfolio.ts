@@ -13,6 +13,7 @@ import {
 import { createClient } from "@/lib/supabase/server";
 import { createPublicClient, siteTag } from "@/lib/supabase/public";
 import { isLive } from "@/lib/payments/plans";
+import { DEFAULT_FONT } from "@/lib/themes/fonts";
 import type {
   CurrentTenant,
   Experience,
@@ -39,7 +40,13 @@ import type {
  * background regeneration throws, so a blip never takes a live site down.
  */
 
-const DEFAULT_THEME: ThemeConfig = { palette_id: "warm-earth", custom_colors: null, show_photo: true };
+const DEFAULT_THEME: ThemeConfig = {
+  palette_id: "warm-earth",
+  custom_colors: null,
+  font_heading: DEFAULT_FONT,
+  font_body: DEFAULT_FONT,
+  show_photo: true,
+};
 
 /** Featured projects first ("highlighted at the top"), otherwise the owner's order. */
 function displayOrder(projects: Project[]): Project[] {
@@ -84,8 +91,14 @@ async function loadPortfolio(supabase: SupabaseClient, tenantId: string): Promis
     projects: displayOrder((projects.data ?? []).map(toProject)),
     experiences: experiences.data ?? [],
     skills: skills.data ?? [],
+    // The nullable columns fall back to the defaults
     theme: theme.data
-      ? { ...theme.data, show_photo: theme.data.show_photo ?? DEFAULT_THEME.show_photo }
+      ? {
+          ...theme.data,
+          font_heading: theme.data.font_heading ?? DEFAULT_FONT,
+          font_body: theme.data.font_body ?? DEFAULT_FONT,
+          show_photo: theme.data.show_photo ?? DEFAULT_THEME.show_photo,
+        }
       : DEFAULT_THEME,
   };
 }

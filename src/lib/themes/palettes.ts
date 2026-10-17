@@ -3,6 +3,7 @@
  * Each one maps 1:1 to the CSS variables injected on portfolio render.
  */
 
+import { fontStack } from "@/lib/themes/fonts";
 import type { ThemeConfig } from "@/types";
 
 export interface ThemePalette {
@@ -104,7 +105,15 @@ export function getPalette(id: string): ThemePalette {
   return palettes.find((p) => p.id === id) ?? palettes[0];
 }
 
+export type ColorKey = keyof ThemePalette["colors"];
+
+export const COLOR_KEYS = Object.keys(palettes[0].colors) as ColorKey[];
+
 const HEX_COLOR = /^#[0-9a-f]{6}$/i;
+
+export function isHexColor(value: unknown): value is string {
+  return typeof value === "string" && HEX_COLOR.test(value);
+}
 
 /**
  * The tenant's palette: the preset from theme_configs.palette_id, with any
@@ -117,11 +126,22 @@ export function resolvePalette(config: Pick<ThemeConfig, "palette_id" | "custom_
   if (!custom || typeof custom !== "object") return base;
 
   const colors = { ...base.colors };
-  for (const key of Object.keys(colors) as (keyof ThemePalette["colors"])[]) {
+  for (const key of COLOR_KEYS) {
     const value = custom[key];
-    if (typeof value === "string" && HEX_COLOR.test(value)) colors[key] = value;
+    if (isHexColor(value)) colors[key] = value;
   }
   return { ...base, colors };
+}
+
+/** The valid overrides in a stored custom_colors value (anything else is ignored). */
+export function customOverrides(custom: unknown): Partial<Record<ColorKey, string>> {
+  if (!custom || typeof custom !== "object") return {};
+  const out: Partial<Record<ColorKey, string>> = {};
+  for (const key of COLOR_KEYS) {
+    const value = (custom as Record<string, unknown>)[key];
+    if (isHexColor(value)) out[key] = value;
+  }
+  return out;
 }
 
 /** WCAG relative luminance of a #RRGGBB colour. */
@@ -133,6 +153,12 @@ function luminance(hex: string): number {
   return 0.2126 * r + 0.7152 * g + 0.0722 * b;
 }
 
+/** WCAG contrast ratio between two #RRGGBB colours (1 to 21). */
+export function contrastRatio(a: string, b: string): number {
+  const [hi, lo] = [luminance(a), luminance(b)].sort((x, y) => y - x);
+  return (hi + 0.05) / (lo + 0.05);
+}
+
 /** Near-black or white, whichever contrasts more with the given background. */
 export function readableOn(hex: string): string {
   const l = luminance(hex);
@@ -140,16 +166,33 @@ export function readableOn(hex: string): string {
 }
 
 /**
- * The palette as a `:root { … }` rule. Injected by the portfolio layouts so
- * the whole page (body background, selection, focus rings) takes the theme.
- * Every value is a validated hex colour, so the string is safe to inline.
+ * Every CSS variable a portfolio reads: the resolved palette, the text colour
+ * for the accent, and the two typefaces. Shared by the live site (themeCss)
+ * and the dashboard's live preview (a `style` prop), so they can't drift.
  */
-export function themeCss(palette: ThemePalette): string {
-  const vars = Object.entries(paletteVars(palette))
+export function themeVars(config: Pick<ThemeConfig, "palette_id" | "custom_colors" | "font_heading" | "font_body">) {
+  const palette = resolvePalette(config);
+  return {
+    ...(paletteVars(palette) as Record<string, string>),
+    "--accent-fg": readableOn(palette.colors.accent),
+    "--pf-font-heading": fontStack(config.font_heading),
+    "--pf-font-body": fontStack(config.font_body),
+    colorScheme: luminance(palette.colors.background) < 0.2 ? "dark" : "light",
+  };
+}
+
+/**
+ * The theme as a `:root { … }` rule. Injected by the portfolio layouts so
+ * the whole page (body background, selection, focus rings) takes the theme.
+ * Colours are validated hex and fonts come from a fixed list, so the string
+ * is safe to inline.
+ */
+export function themeCss(config: ThemeConfig): string {
+  const { colorScheme, ...vars } = themeVars(config);
+  const declarations = Object.entries(vars)
     .map(([name, value]) => `${name}:${value};`)
     .join("");
-  const dark = luminance(palette.colors.background) < 0.2;
-  return `:root{${vars}--accent-fg:${readableOn(palette.colors.accent)};color-scheme:${dark ? "dark" : "light"};}`;
+  return `:root{${declarations}color-scheme:${colorScheme};}`;
 }
 
 /** CSS custom properties for a palette, ready for a `style` prop. */

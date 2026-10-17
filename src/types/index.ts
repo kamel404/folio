@@ -70,11 +70,14 @@ export interface Skill {
   sort_order: number;
 }
 
-/** The parts of theme_configs the portfolio uses today (fonts and layout variants come in Phase 4). */
+/** The parts of theme_configs the portfolio uses (layout_variant is a future feature). */
 export interface ThemeConfig {
   palette_id: string;
-  /** Pro: overrides for individual palette colours, keyed like ThemePalette["colors"] */
+  /** Overrides for individual palette colours, keyed like ThemePalette["colors"] */
   custom_colors: Record<string, unknown> | null;
+  /** A name from PORTFOLIO_FONTS (lib/themes/fonts.ts) */
+  font_heading: string;
+  font_body: string;
   show_photo: boolean;
 }
 

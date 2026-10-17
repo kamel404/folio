@@ -16,7 +16,7 @@ export const EXPERIENCE_COLUMNS =
 
 export const SKILL_COLUMNS = "id, tenant_id, name, category, sort_order";
 
-export const THEME_COLUMNS = "palette_id, custom_colors, show_photo";
+export const THEME_COLUMNS = "palette_id, custom_colors, font_heading, font_body, show_photo";
 
 export type ProjectRow = Omit<Project, "technologies"> & {
   project_technologies: { technologies: { name: string } | null }[];
