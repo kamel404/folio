@@ -1,50 +1,15 @@
 "use server";
 
-import { z } from "zod";
+import { profileSchema } from "@/lib/validation";
 import { getActionTenant } from "@/lib/data/dashboard";
-import { AVAILABILITY_OPTIONS } from "@/lib/options";
 import { checkImage, imageFromForm, removeImage, revalidateTenant, uploadImage } from "@/lib/data/mutations";
 import {
   SAVE_FAILED,
   SESSION_EXPIRED,
   fieldErrorsFrom,
-  optionalEmail,
-  optionalText,
-  optionalUrl,
-  requiredText,
   text,
   type FormState,
 } from "@/lib/forms";
-
-/** linkedin.com or any of its subdomains (not "evil-linkedin.com"). */
-const onHost = (host: string) => (v: string | null) => {
-  if (!v) return true;
-  try {
-    const hostname = new URL(v).hostname;
-    return hostname === host || hostname.endsWith(`.${host}`);
-  } catch {
-    return true; // malformed links are already reported by optionalUrl
-  }
-};
-
-const profileSchema = z.object({
-  name: requiredText("your name", 80),
-  title: requiredText("a headline", 100),
-  short_bio: optionalText(200),
-  long_bio: optionalText(5000),
-  email: optionalEmail,
-  phone: optionalText(40).refine(
-    (v) => !v || /^[+\d\s().-]{5,}$/.test(v),
-    "Use digits, spaces and + ( ) - only."
-  ),
-  location: optionalText(80),
-  availability_status: z
-    .enum(["", ...AVAILABILITY_OPTIONS.map((o) => o.value)], "Choose an option from the list.")
-    .transform((v) => v || null),
-  linkedin_url: optionalUrl.refine(onHost("linkedin.com"), "That doesn't look like a LinkedIn link."),
-  github_url: optionalUrl.refine(onHost("github.com"), "That doesn't look like a GitHub link."),
-  cv_url: optionalUrl,
-});
 
 const FIELDS = [
   "name",

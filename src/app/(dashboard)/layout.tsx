@@ -3,6 +3,8 @@ import { redirect } from "next/navigation";
 import { Container } from "@/components/ui/container";
 import { DashboardSidebar } from "@/components/dashboard/dashboard-sidebar";
 import { Toaster } from "@/components/ui/toaster";
+import { AiAllowanceProvider } from "@/components/dashboard/ai-allowance";
+import { getAiAllowance } from "@/lib/ai/usage";
 import { signOut } from "@/app/(auth)/actions";
 import { getCurrentTenant } from "@/lib/data/tenant";
 import { createClient } from "@/lib/supabase/server";
@@ -36,11 +38,22 @@ export default async function DashboardLayout({ children }: LayoutProps<"/">) {
     );
   }
 
+  // First visit (new signups and accounts from before onboarding existed): set up once, or skip
+  if (current.tenant.onboarding !== "completed") redirect("/onboarding");
+
+  // For the "Rewrite with AI" buttons. Not worth failing the whole dashboard over: they hide on error.
+  const allowance = await getAiAllowance(current.tenant).catch((error) => {
+    console.error("[dashboard] AI allowance", error);
+    return null;
+  });
+
   return (
-    <div className="flex min-h-screen flex-1 flex-col lg:flex-row">
-      <DashboardSidebar current={current} />
-      <main className="min-w-0 flex-1">{children}</main>
-      <Toaster />
-    </div>
+    <AiAllowanceProvider initial={allowance}>
+      <div className="flex min-h-screen flex-1 flex-col lg:flex-row">
+        <DashboardSidebar current={current} />
+        <main className="min-w-0 flex-1">{children}</main>
+        <Toaster />
+      </div>
+    </AiAllowanceProvider>
   );
 }

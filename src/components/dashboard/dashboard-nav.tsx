@@ -18,7 +18,7 @@ const items: NavItem[] = [
   { href: "/dashboard/experience", label: "Experience" },
   { href: "/dashboard/skills", label: "Skills" },
   { href: "/dashboard/theme", label: "Theme" },
-  { href: "/dashboard/import", label: "Import CV", soon: true },
+  { href: "/dashboard/import", label: "Import" },
   { href: "/dashboard/settings", label: "Settings", soon: true },
 ];
 

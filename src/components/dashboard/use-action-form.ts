@@ -20,7 +20,10 @@ type FormAction = (prev: FormState, formData: FormData) => Promise<FormState>;
  * moving to another category).
  * `action` is still passed to <form> so the form works before JS loads.
  */
-export function useActionForm(action: FormAction, options: { onSuccess?: (form: HTMLFormElement) => void } = {}) {
+export function useActionForm(
+  action: FormAction,
+  options: { onSuccess?: (form: HTMLFormElement) => void; /** false: no toast (e.g. wizard steps that move on by themselves) */ toast?: boolean } = {}
+) {
   const router = useRouter();
   const formRef = useRef<HTMLFormElement>(null);
   const onSuccess = useRef(options.onSuccess);
@@ -37,7 +40,7 @@ export function useActionForm(action: FormAction, options: { onSuccess?: (form: 
       return { error: NETWORK_FAILED };
     }
     if (result.success) {
-      toast.success(result.success);
+      if (options.toast !== false) toast.success(result.success);
       if (formRef.current) onSuccess.current?.(formRef.current);
       if (result.redirectTo) router.push(result.redirectTo);
     }

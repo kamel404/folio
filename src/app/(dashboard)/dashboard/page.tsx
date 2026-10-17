@@ -43,7 +43,13 @@ export default async function DashboardOverview() {
   ];
 
   const nextSteps = [
-    { title: "Import your CV", body: "Fill in your profile in one go.", soon: true },
+    {
+      title: "Import your CV",
+      body: "Fill in your profile, roles, projects and skills in one go.",
+      href: "/dashboard/import",
+      cta: "Import",
+      done: projects > 0 || experiences > 0,
+    },
     {
       title: "Fill in your profile",
       body: "Name, headline, photo, bio and links.",
@@ -154,7 +160,6 @@ export default async function DashboardOverview() {
                     {step.cta}
                   </Link>
                 )}
-                {step.soon && <Badge variant="outline">Soon</Badge>}
               </li>
             ))}
           </ol>

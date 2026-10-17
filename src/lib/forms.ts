@@ -77,5 +77,20 @@ export const optionalEmail = z
   .refine((v) => !v || z.email().safeParse(v).success, "Enter a valid email address.")
   .transform((v) => v || null);
 
+/** "YYYY-MM", the format experience dates are stored in. */
+export const MONTH = /^(\d{4})-(0[1-9]|1[0-2])$/;
+
+/** A required YYYY-MM month in a realistic range (1950 … next year). */
+export const month = (label: string) =>
+  z
+    .string()
+    .trim()
+    .min(1, `Enter the ${label}.`)
+    .regex(MONTH, "Use the format YYYY-MM, e.g. 2023-09.")
+    .refine((v) => {
+      const year = Number(v.slice(0, 4));
+      return year >= 1950 && year <= new Date().getFullYear() + 1;
+    }, "Enter a realistic date.");
+
 /** Postgres error codes we turn into friendly messages. */
 export const PG_UNIQUE_VIOLATION = "23505";

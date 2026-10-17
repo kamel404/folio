@@ -7,6 +7,7 @@ import { Select } from "@/components/ui/select";
 import { FieldRow, FormActions, FormError, FormSection } from "@/components/dashboard/form-parts";
 import { ImageField } from "@/components/dashboard/image-field";
 import { useActionForm } from "@/components/dashboard/use-action-form";
+import { RewriteButton } from "@/components/dashboard/rewrite-button";
 import { AVAILABILITY_OPTIONS } from "@/lib/options";
 import type { Profile } from "@/types";
 
@@ -74,6 +75,7 @@ function ProfileForm({ profile }: { profile: Profile }) {
           defaultValue={p.short_bio ?? ""}
           error={fe.short_bio}
         />
+        <RewriteButton field="short_bio" target="short_bio" />
         <Textarea
           name="long_bio"
           label="About you"
@@ -82,6 +84,7 @@ function ProfileForm({ profile }: { profile: Profile }) {
           defaultValue={p.long_bio ?? ""}
           error={fe.long_bio}
         />
+        <RewriteButton field="long_bio" target="long_bio" />
       </FormSection>
 
       <FormSection title="Contact" description="Shown on your portfolio so people can reach you. Leave blank to hide.">

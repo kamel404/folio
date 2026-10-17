@@ -5,7 +5,7 @@ import { redirectWithCookies, updateSession } from "@/lib/supabase/proxy";
 /**
  * Next 16 "proxy" (formerly middleware):
  *   1. Tenant subdomains  lina.getfolio.dev/x  → rewritten to /sites/lina/x
- *   2. Auth guard         /dashboard and /preview need a session; /login & /signup bounce signed-in users
+ *   2. Auth guard         /dashboard, /onboarding and /preview need a session; /login & /signup bounce signed-in users
  */
 
 const ROOT_DOMAIN = (process.env.NEXT_PUBLIC_ROOT_DOMAIN ?? "getfolio.dev").toLowerCase();
@@ -23,8 +23,8 @@ function tenantSlugFromHost(host: string): string | null {
 }
 
 const AUTH_PAGES = ["/login", "/signup", "/forgot-password"];
-/** Need a session: the dashboard and the owner's private portfolio preview. */
-const PROTECTED = ["/dashboard", "/preview"];
+/** Need a session: the dashboard, onboarding and the owner's private portfolio preview. */
+const PROTECTED = ["/dashboard", "/onboarding", "/preview"];
 
 export async function proxy(request: NextRequest) {
   const { pathname, search } = request.nextUrl;

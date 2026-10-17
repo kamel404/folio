@@ -8,6 +8,7 @@ import { FieldRow, FormActions, FormError, FormSection } from "@/components/dash
 import { ImageField } from "@/components/dashboard/image-field";
 import { DeleteButton } from "@/components/dashboard/list-actions";
 import { useActionForm } from "@/components/dashboard/use-action-form";
+import { RewriteButton } from "@/components/dashboard/rewrite-button";
 import type { Project } from "@/types";
 
 interface ProjectFormProps {
@@ -38,6 +39,7 @@ function ProjectForm({ project, categories }: ProjectFormProps) {
           defaultValue={project?.short_description}
           error={fe.short_description}
         />
+        <RewriteButton field="project_short" target="short_description" />
         <FieldRow>
           <div>
             <Input
@@ -78,6 +80,7 @@ function ProjectForm({ project, categories }: ProjectFormProps) {
 
       <FormSection title="Details" description="The full story: the problem, your role, what you shipped.">
         <Textarea name="description" label="Description" rows={8} defaultValue={project?.description ?? ""} error={fe.description} />
+        <RewriteButton field="project_description" target="description" />
       </FormSection>
 
       <FormSection title="Links" description="Full links or just the address.">

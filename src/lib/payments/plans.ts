@@ -15,6 +15,8 @@ export interface Plan {
   features: string[];
   limits: {
     aiRewrites: number | null; // per month; null = unlimited
+    /** Every AI call (imports + rewrites) per UTC day — a cost guard, not a selling point */
+    aiDaily: number;
     customDomain: boolean;
     analytics: "basic" | "full";
   };
@@ -35,7 +37,7 @@ export const plans: Plan[] = [
       "3 AI rewrites a month",
       "Basic visitor analytics",
     ],
-    limits: { aiRewrites: 3, customDomain: false, analytics: "basic" },
+    limits: { aiRewrites: 3, aiDaily: 10, customDomain: false, analytics: "basic" },
   },
   {
     id: "pro",
@@ -50,9 +52,16 @@ export const plans: Plan[] = [
       "Portfolio quality review",
       "Full analytics",
     ],
-    limits: { aiRewrites: null, customDomain: true, analytics: "full" },
+    limits: { aiRewrites: null, aiDaily: 20, customDomain: true, analytics: "full" },
   },
 ];
+
+/** Before paying: one AI import (CV or interview) to see what Folio can do. No rewrites. */
+export const UNPAID_AI_IMPORTS = 1;
+
+export function getPlan(tenant: Pick<Tenant, "plan">): Plan | null {
+  return plans.find((p) => p.id === tenant.plan) ?? null;
+}
 
 /**
  * The publishing gate. Everyone can edit and preview; only a paid plan

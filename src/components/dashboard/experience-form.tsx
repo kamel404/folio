@@ -7,6 +7,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { FieldRow, FormActions, FormError, FormSection } from "@/components/dashboard/form-parts";
 import { DeleteButton } from "@/components/dashboard/list-actions";
 import { useActionForm } from "@/components/dashboard/use-action-form";
+import { RewriteButton } from "@/components/dashboard/rewrite-button";
 import type { Experience } from "@/types";
 
 function ExperienceForm({ experience }: { experience?: Experience }) {
@@ -34,6 +35,7 @@ function ExperienceForm({ experience }: { experience?: Experience }) {
           defaultValue={experience?.description}
           error={fe.description}
         />
+        <RewriteButton field="experience_description" target="description" />
       </FormSection>
 
       <FormSection title="Dates" description="Month and year are enough.">

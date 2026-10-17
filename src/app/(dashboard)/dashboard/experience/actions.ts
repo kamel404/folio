@@ -1,6 +1,7 @@
 "use server";
 
 import { z } from "zod";
+import { experienceSchema } from "@/lib/validation";
 import { getActionTenant } from "@/lib/data/dashboard";
 import { nextSortOrder, reorderRows, revalidateTenant } from "@/lib/data/mutations";
 import {
@@ -8,45 +9,10 @@ import {
   SESSION_EXPIRED,
   checked,
   fieldErrorsFrom,
-  requiredText,
   text,
   type ActionResult,
   type FormState,
 } from "@/lib/forms";
-
-const MONTH = /^(\d{4})-(0[1-9]|1[0-2])$/;
-
-const month = (label: string) =>
-  z
-    .string()
-    .trim()
-    .min(1, `Enter the ${label}.`)
-    .regex(MONTH, "Use the format YYYY-MM, e.g. 2023-09.")
-    .refine((v) => {
-      const year = Number(v.slice(0, 4));
-      return year >= 1950 && year <= new Date().getFullYear() + 1;
-    }, "Enter a realistic date.");
-
-const experienceSchema = z
-  .object({
-    company: requiredText("the company", 120),
-    position: requiredText("your role", 120),
-    description: requiredText("a description", 5000),
-    start_date: month("start date"),
-    current: z.boolean(),
-    end_date: z.string().trim(),
-  })
-  .superRefine((v, ctx) => {
-    if (v.current) return;
-    const end = month("end date").safeParse(v.end_date);
-    if (!end.success) {
-      ctx.addIssue({ code: "custom", path: ["end_date"], message: end.error.issues[0].message });
-    } else if (MONTH.test(v.start_date) && end.data < v.start_date) {
-      // "YYYY-MM" strings compare correctly as text
-      ctx.addIssue({ code: "custom", path: ["end_date"], message: "The end date can't be before the start date." });
-    }
-  })
-  .transform((v) => ({ ...v, end_date: v.current ? null : v.end_date }));
 
 export async function saveExperience(
   experienceId: string | null,

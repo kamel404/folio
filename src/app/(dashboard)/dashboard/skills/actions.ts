@@ -1,41 +1,17 @@
 "use server";
 
 import { z } from "zod";
+import { addSchema, updateSchema } from "@/lib/validation";
 import { getActionTenant } from "@/lib/data/dashboard";
 import { nextSortOrder, reorderRows, revalidateTenant } from "@/lib/data/mutations";
 import {
   SAVE_FAILED,
   SESSION_EXPIRED,
   fieldErrorsFrom,
-  requiredText,
   text,
   type ActionResult,
   type FormState,
 } from "@/lib/forms";
-
-const MAX_PER_ADD = 30;
-const category = requiredText("a category", 60);
-
-const addSchema = z.object({
-  names: z
-    .string()
-    .transform((v) => {
-      const seen = new Set<string>();
-      return v
-        .split(",")
-        .map((s) => s.trim().replace(/\s+/g, " "))
-        .filter((s) => s && !seen.has(s.toLowerCase()) && seen.add(s.toLowerCase()));
-    })
-    .refine((list) => list.length > 0, "Enter at least one skill.")
-    .refine((list) => list.length <= MAX_PER_ADD, `Add at most ${MAX_PER_ADD} skills at once.`)
-    .refine((list) => list.every((s) => s.length <= 60), "Each skill must be under 60 characters."),
-  category,
-});
-
-const updateSchema = z.object({
-  name: requiredText("a skill", 60),
-  category,
-});
 
 /**
  * The category as already spelled by this tenant ("frontend" → "Frontend", so
