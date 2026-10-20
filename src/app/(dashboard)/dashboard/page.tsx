@@ -11,6 +11,7 @@ import { ROOT_DOMAIN } from "@/lib/config";
 import { cn } from "@/lib/utils";
 import { isLive } from "@/lib/payments/plans";
 import { PublishButton } from "@/components/dashboard/publish-button";
+import { isPaymentsConfigured } from "@/lib/payments/lemon-squeezy";
 
 export const metadata = { title: "Overview" };
 
@@ -66,8 +67,8 @@ export default async function DashboardOverview() {
     {
       title: "Choose a plan to go live",
       body: "Starter or Pro. You only pay to publish.",
-      href: "/pricing",
-      cta: "See plans",
+      href: "/dashboard/billing",
+      cta: "Choose a plan",
       done: live,
     },
   ];
@@ -94,7 +95,7 @@ export default async function DashboardOverview() {
               <Eye size={16} aria-hidden />
               Preview
             </Link>
-            <PublishButton tenant={tenant} />
+            <PublishButton tenant={tenant} paymentsReady={isPaymentsConfigured()} />
           </div>
         }
       />

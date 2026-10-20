@@ -19,6 +19,7 @@ const items: NavItem[] = [
   { href: "/dashboard/skills", label: "Skills" },
   { href: "/dashboard/theme", label: "Theme" },
   { href: "/dashboard/import", label: "Import" },
+  { href: "/dashboard/billing", label: "Billing" },
   { href: "/dashboard/settings", label: "Settings", soon: true },
 ];
 

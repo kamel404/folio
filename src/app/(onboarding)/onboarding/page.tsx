@@ -3,6 +3,7 @@ import { OnboardingWizard } from "@/components/onboarding/onboarding-wizard";
 import { getPreview } from "@/lib/data/portfolio";
 import { getAiAllowance } from "@/lib/ai/usage";
 import { ROOT_DOMAIN } from "@/lib/config";
+import { isPaymentsConfigured } from "@/lib/payments/lemon-squeezy";
 
 export const metadata = { title: "Set up your portfolio" };
 
@@ -23,6 +24,7 @@ export default async function OnboardingPage({ searchParams }: PageProps<"/onboa
       allowance={allowance}
       address={`${tenant.slug}.${ROOT_DOMAIN}`}
       skipFailed={error === "skip"}
+      paymentsReady={isPaymentsConfigured()}
     />
   );
 }

@@ -90,6 +90,22 @@ export interface PortfolioContent {
   theme: ThemeConfig;
 }
 
+/** Lemon Squeezy subscription statuses (stored as-is in subscriptions.status). */
+export type SubscriptionStatus = "on_trial" | "active" | "paused" | "past_due" | "unpaid" | "cancelled" | "expired";
+export type BillingInterval = "month" | "year";
+
+/** The tenant's subscription row, as the dashboard reads it (owner-readable via RLS). */
+export interface Subscription {
+  plan: "starter" | "pro";
+  status: SubscriptionStatus;
+  billing_interval: BillingInterval | null;
+  renews_at: string | null;
+  ends_at: string | null;
+  card_brand: string | null;
+  card_last_four: string | null;
+  test_mode: boolean;
+}
+
 export interface CurrentTenant {
   user: { id: string; email: string };
   tenant: Tenant;

@@ -116,18 +116,43 @@ create table if not exists public.theme_configs (
   updated_at     timestamptz not null default now()
 );
 
+-- One row per tenant: the Lemon Squeezy subscription that decides tenants.plan.
+-- Written only by apply_subscription() (webhook + billing actions).
 create table if not exists public.subscriptions (
   id                   uuid primary key default gen_random_uuid(),
   tenant_id            uuid unique not null references public.tenants(id) on delete cascade,
   ls_subscription_id   text,
   ls_customer_id       text,
   plan                 text not null default 'none',
-  status               text not null default 'active',       -- active | cancelled | past_due | expired
-  current_period_start timestamptz,
-  current_period_end   timestamptz,
+  status               text not null default 'active',       -- Lemon Squeezy status: on_trial | active | paused | past_due | unpaid | cancelled | expired
   created_at           timestamptz not null default now(),
   updated_at           timestamptz not null default now()
 );
+-- Phase 6 columns (ALTER so existing databases pick them up when this file is re-run)
+alter table public.subscriptions add column if not exists variant_id       text;
+alter table public.subscriptions add column if not exists billing_interval text;            -- month | year
+alter table public.subscriptions add column if not exists renews_at        timestamptz;     -- next charge
+alter table public.subscriptions add column if not exists ends_at          timestamptz;     -- cancelled: last day live
+alter table public.subscriptions add column if not exists card_brand       text;
+alter table public.subscriptions add column if not exists card_last_four   text;
+alter table public.subscriptions add column if not exists test_mode        boolean not null default false;
+alter table public.subscriptions add column if not exists ls_updated_at    timestamptz;     -- orders webhook deliveries
+alter table public.subscriptions drop column if exists current_period_start;               -- replaced by renews_at / ends_at
+alter table public.subscriptions drop column if exists current_period_end;
+create unique index if not exists idx_subscriptions_ls_id on public.subscriptions(ls_subscription_id);
+
+-- Every webhook delivery, for debugging and replays. Service role only (contains emails).
+create table if not exists public.payment_events (
+  id                 uuid primary key default gen_random_uuid(),
+  event_name         text not null,
+  ls_subscription_id text,
+  tenant_id          uuid references public.tenants(id) on delete set null,
+  test_mode          boolean not null default false,
+  outcome            text not null,                            -- applied | stale | superseded | ignored | unknown_tenant | unknown_variant
+  payload            jsonb not null,
+  created_at         timestamptz not null default now()
+);
+create index if not exists idx_payment_events_created on public.payment_events(created_at desc);
 
 create table if not exists public.ai_usage (
   id         uuid primary key default gen_random_uuid(),
@@ -157,6 +182,86 @@ create or replace function public.tenant_is_live(tid uuid)
 returns boolean language sql stable security definer set search_path = public as $$
   select exists (select 1 from public.tenants where id = tid and plan <> 'none' and active);
 $$;
+
+-- Lemon Squeezy statuses that keep a portfolio online. 'cancelled' stays live
+-- until ends_at (Lemon Squeezy then sends 'expired'); 'past_due' stays live
+-- while payment is retried.
+create or replace function public.subscription_grants_access(p_status text)
+returns boolean language sql immutable as $$
+  select p_status in ('on_trial', 'active', 'past_due', 'cancelled');
+$$;
+
+-- Store a subscription snapshot (from a webhook or an API response) and set
+-- tenants.plan to match, in one transaction. Snapshots can arrive twice or out
+-- of order, so:
+--   • an older snapshot of the same subscription is ignored     → 'stale'
+--   • an old subscription ending never overrides a newer one
+--     that still grants access                                  → 'superseded'
+-- Service role only.
+create or replace function public.apply_subscription(
+  p_tenant_id          uuid,
+  p_ls_subscription_id text,
+  p_ls_customer_id     text,
+  p_variant_id         text,
+  p_plan               text,
+  p_billing_interval   text,
+  p_status             text,
+  p_renews_at          timestamptz,
+  p_ends_at            timestamptz,
+  p_card_brand         text,
+  p_card_last_four     text,
+  p_test_mode          boolean,
+  p_ls_updated_at      timestamptz
+) returns text language plpgsql security definer set search_path = public as $$
+declare
+  v_current public.subscriptions%rowtype;
+  v_access  boolean := public.subscription_grants_access(p_status);
+begin
+  if p_plan not in ('starter', 'pro') then
+    raise exception 'invalid_plan';
+  end if;
+
+  select * into v_current from public.subscriptions where tenant_id = p_tenant_id for update;
+  if found then
+    if v_current.ls_subscription_id = p_ls_subscription_id then
+      if v_current.ls_updated_at is not null and p_ls_updated_at < v_current.ls_updated_at then
+        return 'stale';
+      end if;
+    elsif public.subscription_grants_access(v_current.status) and not v_access then
+      return 'superseded';
+    end if;
+  end if;
+
+  insert into public.subscriptions as s (
+    tenant_id, ls_subscription_id, ls_customer_id, variant_id, plan, billing_interval, status,
+    renews_at, ends_at, card_brand, card_last_four, test_mode, ls_updated_at
+  ) values (
+    p_tenant_id, p_ls_subscription_id, p_ls_customer_id, p_variant_id, p_plan, p_billing_interval, p_status,
+    p_renews_at, p_ends_at, p_card_brand, p_card_last_four, p_test_mode, p_ls_updated_at
+  )
+  on conflict (tenant_id) do update set
+    ls_subscription_id = excluded.ls_subscription_id,
+    ls_customer_id     = excluded.ls_customer_id,
+    variant_id         = excluded.variant_id,
+    plan               = excluded.plan,
+    billing_interval   = excluded.billing_interval,
+    status             = excluded.status,
+    renews_at          = excluded.renews_at,
+    ends_at            = excluded.ends_at,
+    card_brand         = excluded.card_brand,
+    card_last_four     = excluded.card_last_four,
+    test_mode          = excluded.test_mode,
+    ls_updated_at      = excluded.ls_updated_at;
+
+  update public.tenants
+     set plan = case when v_access then p_plan else 'none' end
+   where id = p_tenant_id;
+
+  return 'applied';
+end;
+$$;
+revoke execute on function public.apply_subscription(uuid, text, text, text, text, text, text, timestamptz, timestamptz, text, text, boolean, timestamptz) from public, anon, authenticated;
+grant execute on function public.apply_subscription(uuid, text, text, text, text, text, text, timestamptz, timestamptz, text, text, boolean, timestamptz) to service_role;
 
 create or replace function public.set_updated_at()
 returns trigger language plpgsql as $$
@@ -227,6 +332,7 @@ alter table public.theme_configs        enable row level security;
 alter table public.subscriptions        enable row level security;
 alter table public.ai_usage             enable row level security;
 alter table public.platform_admins      enable row level security;
+alter table public.payment_events       enable row level security;
 
 -- tenants: owner can read their row and change ONLY `onboarding`.
 -- plan / slug / active / custom_domain change through server code (service role) only.
@@ -290,7 +396,8 @@ create policy owner_select_ai_usage on public.ai_usage for select to authenticat
   using (public.owns_tenant(tenant_id));
 revoke insert, update, delete on public.ai_usage from anon, authenticated;
 
--- platform_admins: no policies → only the service role can read/write
+-- platform_admins, payment_events: no policies → only the service role can read/write
+revoke all on public.payment_events from anon, authenticated;
 
 
 -- ─── Storage: portfolio-images/{tenant_id}/… ───────────────────────────────

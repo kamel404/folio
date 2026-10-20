@@ -16,8 +16,8 @@ import { cn } from "@/lib/utils";
  *   • on success a short confirmation toast (except reorder, which is self-evident)
  */
 
-/** Calls an action and turns an unexpected throw (network down, deploy skew) into an ActionResult. */
-async function run(action: () => Promise<ActionResult>): Promise<ActionResult> {
+/** Calls an action and turns an unexpected throw (network down, deploy skew) into a failed result. */
+export async function run<T extends { ok: boolean }>(action: () => Promise<T>): Promise<T | { ok: false; error: string }> {
   try {
     return await action();
   } catch (error) {
@@ -27,7 +27,7 @@ async function run(action: () => Promise<ActionResult>): Promise<ActionResult> {
 }
 
 /** Error toast; an expired session gets a "Sign in" button that returns to this page. */
-function useToastError() {
+export function useToastError() {
   const router = useRouter();
   const pathname = usePathname();
   return (message: string) =>

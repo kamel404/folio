@@ -84,6 +84,8 @@ interface ConfirmDialogProps {
   confirmLabel?: string;
   pendingLabel?: string;
   pending?: boolean;
+  /** "primary" for confirmations that aren't destructive (e.g. switching plan) */
+  tone?: "danger" | "primary";
 }
 
 function ConfirmDialog({
@@ -95,6 +97,7 @@ function ConfirmDialog({
   confirmLabel = "Delete",
   pendingLabel = "Deleting…",
   pending = false,
+  tone = "danger",
 }: ConfirmDialogProps) {
   return (
     <Modal open={open} onClose={onClose} title={title} description={description} busy={pending}>
@@ -102,7 +105,7 @@ function ConfirmDialog({
         <Button variant="ghost" onClick={onClose} disabled={pending}>
           Cancel
         </Button>
-        <Button variant="danger" onClick={onConfirm} isLoading={pending} loadingText={pendingLabel}>
+        <Button variant={tone} onClick={onConfirm} isLoading={pending} loadingText={pendingLabel}>
           {confirmLabel}
         </Button>
       </div>

@@ -53,9 +53,10 @@ interface OnboardingWizardProps {
   allowance: AiAllowance;
   address: string;
   skipFailed: boolean;
+  paymentsReady: boolean;
 }
 
-function OnboardingWizard({ tenant, content, allowance, address, skipFailed }: OnboardingWizardProps) {
+function OnboardingWizard({ tenant, content, allowance, address, skipFailed, paymentsReady }: OnboardingWizardProps) {
   const router = useRouter();
   const [step, setStepState] = useState<Step>("basics");
 
@@ -134,7 +135,7 @@ function OnboardingWizard({ tenant, content, allowance, address, skipFailed }: O
       {step === "theme" && (
         <ThemeStep content={content} address={address} onBack={() => setStep("content")} onDone={() => setStep("done")} />
       )}
-      {step === "done" && <DoneStep tenant={tenant} />}
+      {step === "done" && <DoneStep tenant={tenant} paymentsReady={paymentsReady} />}
     </>
   );
 }
@@ -285,7 +286,7 @@ function ThemeStep({
 
 /* ─── Done ─── */
 
-function DoneStep({ tenant }: { tenant: Tenant }) {
+function DoneStep({ tenant, paymentsReady }: { tenant: Tenant; paymentsReady: boolean }) {
   const live = isLive(tenant);
   return (
     <>
@@ -322,7 +323,7 @@ function DoneStep({ tenant }: { tenant: Tenant }) {
                 <Eye size={16} aria-hidden />
                 Preview your portfolio
               </Link>
-              <PublishButton tenant={tenant} />
+              <PublishButton tenant={tenant} paymentsReady={paymentsReady} />
             </>
           )}
           <Link href="/dashboard" className={buttonVariants({ variant: "secondary" })}>

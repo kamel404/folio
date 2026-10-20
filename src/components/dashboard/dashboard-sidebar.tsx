@@ -4,7 +4,7 @@ import { signOut } from "@/app/(auth)/actions";
 import { Wordmark } from "@/components/ui/wordmark";
 import { DashboardNav } from "@/components/dashboard/dashboard-nav";
 import { ROOT_DOMAIN } from "@/lib/config";
-import { isLive } from "@/lib/payments/plans";
+import { getPlan, isLive } from "@/lib/payments/plans";
 import type { CurrentTenant } from "@/types";
 
 function DashboardSidebar({ current }: { current: CurrentTenant }) {
@@ -35,7 +35,7 @@ function DashboardSidebar({ current }: { current: CurrentTenant }) {
               className={live ? "h-1.5 w-1.5 rounded-full bg-[var(--success)]" : "h-1.5 w-1.5 rounded-full bg-[var(--warning)]"}
             />
             <span className={live ? "text-[var(--success)]" : "text-[var(--warning)]"}>
-              {live ? "Live" : "Offline · no plan"}
+              {live ? `Live · ${getPlan(tenant)?.name}` : "Offline · no plan"}
             </span>
           </p>
           <Link

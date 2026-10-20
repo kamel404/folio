@@ -42,6 +42,9 @@ export async function proxy(request: NextRequest) {
     return NextResponse.rewrite(new URL("/404", request.url));
   }
 
+  // Webhooks are server-to-server: no session to refresh
+  if (pathname.startsWith("/api/webhooks/")) return NextResponse.next();
+
   // 2 ── Auth guard (main domain only)
   const { response, signedIn } = await updateSession(request);
 

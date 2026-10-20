@@ -12,3 +12,11 @@ export function formatMonth(value: string): string {
 export function formatRange(start: string, end: string | null, current: boolean): string {
   return `${formatMonth(start)} – ${current || !end ? "Present" : formatMonth(end)}`;
 }
+
+/** ISO timestamp → "18 Oct 2026" (UTC, so server and browser agree). */
+export function formatDate(value: string | null): string {
+  if (!value) return "";
+  const d = new Date(value);
+  if (Number.isNaN(d.getTime())) return "";
+  return `${d.getUTCDate()} ${MONTHS[d.getUTCMonth()]} ${d.getUTCFullYear()}`;
+}
