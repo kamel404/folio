@@ -3,7 +3,7 @@ import { AuthShell, AsideList } from "@/components/auth/auth-shell";
 import { SignupForm } from "@/components/auth/signup-form";
 import { normalizeSlug } from "@/lib/utils/slug";
 
-export const metadata: Metadata = { title: "Create your account" };
+export const metadata: Metadata = { title: "Create your account", alternates: { canonical: "/signup" } };
 
 export default async function SignupPage({
   searchParams,

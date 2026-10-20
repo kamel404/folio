@@ -3,7 +3,7 @@ import { AuthShell, AsideList } from "@/components/auth/auth-shell";
 import { LoginForm } from "@/components/auth/login-form";
 import { safeNext } from "@/lib/utils/url";
 
-export const metadata: Metadata = { title: "Sign in" };
+export const metadata: Metadata = { title: "Sign in", alternates: { canonical: "/login" } };
 
 export default async function LoginPage({
   searchParams,

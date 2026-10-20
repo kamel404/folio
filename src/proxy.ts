@@ -23,6 +23,8 @@ function tenantSlugFromHost(host: string): string | null {
 }
 
 const AUTH_PAGES = ["/login", "/signup", "/forgot-password"];
+/** Main-domain metadata routes without a file extension the matcher would skip. */
+const PUBLIC_FILES = ["/robots.txt", "/sitemap.xml"];
 /** Need a session: the dashboard, onboarding and the owner's private portfolio preview. */
 const PROTECTED = ["/dashboard", "/onboarding", "/preview"];
 
@@ -42,8 +44,14 @@ export async function proxy(request: NextRequest) {
     return NextResponse.rewrite(new URL("/404", request.url));
   }
 
-  // Webhooks are server-to-server: no session to refresh
-  if (pathname.startsWith("/api/webhooks/")) return NextResponse.next();
+  // Webhooks are server-to-server, and crawler / metadata files are public: no session to refresh
+  if (
+    pathname.startsWith("/api/webhooks/") ||
+    PUBLIC_FILES.includes(pathname) ||
+    pathname.includes("/opengraph-image")
+  ) {
+    return NextResponse.next();
+  }
 
   // 2 ── Auth guard (main domain only)
   const { response, signedIn } = await updateSession(request);

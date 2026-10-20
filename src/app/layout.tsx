@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { DM_Sans, Inter, Instrument_Serif, JetBrains_Mono, Plus_Jakarta_Sans } from "next/font/google";
+import { PLATFORM_URL } from "@/lib/config";
 import "./globals.css";
 
 const inter = Inter({
@@ -38,6 +39,8 @@ const dmSans = DM_Sans({
   preload: false,
 });
 
+// Defaults for every platform page. Marketing pages set their own canonical,
+// Open Graph and image (lib/seo.ts platformMetadata); tenant sites replace all of it.
 export const metadata: Metadata = {
   title: {
     default: "Folio — Build your portfolio in 5 minutes",
@@ -45,11 +48,11 @@ export const metadata: Metadata = {
   },
   description:
     "Folio is an AI-powered portfolio builder for developers and creatives. Sign up, answer a few questions or upload your CV, pick a theme, and your portfolio goes live instantly.",
-  metadataBase: new URL("https://getfolio.dev"),
+  metadataBase: new URL(PLATFORM_URL),
+  applicationName: "Folio",
   openGraph: {
     type: "website",
     locale: "en_US",
-    url: "https://getfolio.dev",
     siteName: "Folio",
     title: "Folio — Build your portfolio in 5 minutes",
     description:
@@ -60,10 +63,8 @@ export const metadata: Metadata = {
     title: "Folio — Build your portfolio in 5 minutes",
     description: "AI-powered portfolio builder for developers and creatives.",
   },
-  robots: {
-    index: true,
-    follow: true,
-  },
+  // No robots default: pages are indexable unless they say otherwise, and an
+  // explicit "index" here would sit next to the "noindex" Next adds to 404s.
 };
 
 export default function RootLayout({ children }: LayoutProps<"/">) {

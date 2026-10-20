@@ -1,14 +1,15 @@
-import type { Metadata } from "next";
 import { PageHeader, Section } from "@/components/layout/section";
 import { PricingGrid } from "@/components/marketing/pricing-table";
 import { FaqList } from "@/components/marketing/faq-list";
 import { ClosingCta } from "@/components/marketing/closing-cta";
+import { platformMetadata } from "@/lib/seo";
 
-export const metadata: Metadata = {
-  title: "Pricing",
+export const metadata = platformMetadata({
+  title: "Pricing | Folio",
   description:
     "Folio has two plans: Starter and Pro. Build and preview your portfolio first, and pay only when you're ready to publish.",
-};
+  path: "/pricing",
+});
 
 const faqs = [
   {
